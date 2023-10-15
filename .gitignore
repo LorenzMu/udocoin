@@ -131,3 +131,8 @@ dist
 
 #IDEA
 .idea
+
+#pycache
+*.pyc
+*.pyo
+__pycache__/
