@@ -10,3 +10,4 @@ CORS(app)
 socketio = SocketIO(app)
 
 from app import endpoints
+from app import server_comm as server_comm

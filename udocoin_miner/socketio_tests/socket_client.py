@@ -12,7 +12,7 @@ def on_connection_response_seed_to_client(args):
     print("[CLIENT] Received connection confirmation from server")
     print("[CLIENT] args: " + str(args))
 
-@client_sio.on('broadcast_message')
+@client_sio.on('broadcast_data')
 def on_broadcast_message(args):
     print("[CLIENT] Received broadcastmessage from seed")
     print('[CLIENT] Message: "' + args["message"] + '"')
