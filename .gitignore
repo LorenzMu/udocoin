@@ -136,3 +136,7 @@ dist
 *.pyc
 *.pyo
 __pycache__/
+
+#keys
+/priv_key.txt
+/pub_key.txt

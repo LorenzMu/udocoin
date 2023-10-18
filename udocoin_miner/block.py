@@ -5,10 +5,17 @@ from dataclasses import dataclass
 
 @dataclass
 class TransactionData:
-    origin_address: str
-    destination_address: str
-    timestamp: str
+    origin_public_key: str
+    destination_public_key: str
+    timestamp: datetime.datetime
     amount: float
+
+#message is a json dump of a TransactionData object
+@dataclass
+class SignedTransaction:
+    origin_public_key: str
+    signature: str
+    message: str
 
 @dataclass
 class BlockData:
@@ -17,8 +24,10 @@ class BlockData:
 @dataclass
 class Block:
     data: BlockData
-    proof: int
+    proof_of_work: int
     prev_hash: str
     index: int
+    block_author_public_key: str
+    block_value: float
 
 #print(Block(data=BlockData(origin_address="a",destination_address="b",timestamp="01.01.1970",amount=2),proof=1,prev_hash="no",index=1))

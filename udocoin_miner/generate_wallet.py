@@ -10,11 +10,17 @@ private_key = rsa.generate_private_key(
     key_size=512,
     backend=default_backend())
 
+priv_key = private_key.private_bytes(encoding=Encoding.PEM, encryption_algorithm=NoEncryption(), format=PrivateFormat.TraditionalOpenSSL)
+pub_key = private_key.public_key().public_bytes(encoding=Encoding.PEM, format=PublicFormat.SubjectPublicKeyInfo)
 
-print("Your private key is: ", private_key.private_bytes(encoding=Encoding.PEM, encryption_algorithm=NoEncryption(), format=PrivateFormat.TraditionalOpenSSL))
-print("Your public key is: ", private_key.public_key().public_bytes(encoding=Encoding.PEM, format=PublicFormat.SubjectPublicKeyInfo))
+print("Your private key is: ", priv_key)
+print("Your public key is: ", pub_key)
 
-# print(len(private_key.private_bytes(encoding=Encoding.PEM, encryption_algorithm=NoEncryption(), format=PrivateFormat.TraditionalOpenSSL)))
+with open("priv_key.txt", "wb") as binary_file:
+    binary_file.write(priv_key)
+
+with open("pub_key.txt", "wb") as binary_file:
+    binary_file.write(pub_key)
 
 # ## If you want to make sure the keys work, uncomment the following code blocks:
 
