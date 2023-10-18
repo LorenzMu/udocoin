@@ -4,10 +4,17 @@ services:
   app:
     build: 
       context: application
+      args:
+        - SEED_SERVER=${SEED_SERVER}
+        - PUBKEY=${PUBKEY}
     ports:
       - "5000"
     restart: always
+    stdin_open: true
     image: matthiasheilmannprivat/udocoin:latest
+    environment:
+      - SEED_SERVER=${SEED_SERVER}
+      - PUBKEY=${PUBKEY}
 
   nginx:
     image: nginx:latest

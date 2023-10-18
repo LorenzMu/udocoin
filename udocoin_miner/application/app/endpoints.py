@@ -1,9 +1,10 @@
 from app import app,server_comm
 from flask import request
+import os
 
 @app.route("/",methods=["GET"])
 def index():
-    return "Running healthy"
+    return f"Running healthy as {'Seed' if os.environ['IS_SEED_SERVER'] else 'Peer'}-Server"
 
 @app.route("/broadcast",methods=["GET"]) # Will prob. be changed to POST
 def notify_peers():
