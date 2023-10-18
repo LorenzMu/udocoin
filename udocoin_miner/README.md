@@ -1,51 +1,23 @@
-# Setup blockchain API
-
-To ensure same versions on development devices and Docker Images
-
-## Init virtual environment
-
+# Run
 ```sh
-cd udocoin_miner
+docker pull matthiasheilmannprivat/udocoin:latest
 ```
 
 ```sh
-python -m venv venv
+
 ```
 
-## Activate virtual environment
+#
 
-Windows cmd
+run Docker-compose
 
 ```sh
-venv\Scripts\activate.bat
+docker-compose up --build --scale app=3
 ```
 
-Windows PowerShell
+stop Docker-compose
 
 ```sh
-venv\Scripts\activate.ps1
+docker-compose down
 ```
 
-If error: "... cannot be loaded because the execution of scripts is disabled on this system.", enable execution with
-
-```sh
-Set-ExecutionPolicy RemoteSigned
-```
-
-## Install requirements
-
-```sh
-pip install -r requirements.txt
-```
-
-## update requirements
-
-```sh
-pipreqs --force
-```
-
-## deactivate virtual environment
-
-```sh
-deactivate
-```

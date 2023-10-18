@@ -3,7 +3,7 @@ import time
 from flask import request
 
 client_sio = socketio.Client()
-client_sio.connect('http://localhost:5000')
+client_sio.connect('http://localhost')
 
 client_sio.emit('connect_peer_to_seed',{"message":"Hello I am peer"})
 
