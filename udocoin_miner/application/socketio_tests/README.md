@@ -1,41 +1,21 @@
 # Test socketio
 
-## run server
-
-```sh
-cd .\udocoin_miner\
-```
-
 activate venv
 
 ```sh
-venv\Scripts\activate.ps1
+udocoin\udocoin_miner\application\venv\Scripts\activate.ps1
 ```
 
-run server
+Navigate to /udocoin/udocoin_miner/application/socketio_tests
 
-```sh
-python run.py
-```
-
-## run socket client
-
-open second terminal
-
-```sh
-cd .\udocoin_miner\
-```
-
-activate venv
-
-```sh
-venv\Scripts\activate.ps1
-```
-
-```sh
-cd .\socketio_tests\
-```
+run script
 
 ```sh
 python socket_client.py
+```
+
+Post broadcast message
+
+```sh
+http://localhost/broadcast?message=<message>
 ```
