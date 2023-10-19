@@ -1,4 +1,4 @@
-from block import TransactionData, SignedTransaction
+from udocoin_dataclasses import TransactionData, SignedTransaction
 from json import dumps, loads
 from datetime import datetime
 from dataclasses import asdict
@@ -41,7 +41,12 @@ def verify_transaction(signed_transaction: SignedTransaction) -> TransactionData
             ),
             hashes.SHA256()
         )
+        print("Message signature was verified, the message is as follows:")
+        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+        print(signed_transaction.message)
+        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         return TransactionData(**loads(signed_transaction.message))
+        
     except InvalidSignature:
         return "Message signature could not be verified!"
 
@@ -60,18 +65,18 @@ def get_pub_key_string(path: str) -> str:
         return f.read()
 
 
-my_transaction_data = TransactionData(get_pub_key_string("pub_key.txt"), "schmarn", timestamp=datetime.now(), amount=50)
+# my_transaction_data = TransactionData(get_pub_key_string("pub_key.txt"), "schmarn", timestamp=datetime.now(), amount=50)
 
-signed_trans = sign_transaction(get_priv_key("priv_key.txt"), get_pub_key_string("pub_key.txt"), my_transaction_data)
-
-
-
-print(verify_transaction(signed_trans))
+# signed_trans = sign_transaction(get_priv_key("priv_key.txt"), get_pub_key_string("pub_key.txt"), my_transaction_data)
 
 
-signed_trans.message = signed_trans.message + b"ich bin ein kleiner hacker"
 
-print(verify_transaction(signed_trans))
+# print(verify_transaction(signed_trans))
+
+
+# signed_trans.message = signed_trans.message + b"ich bin ein kleiner hacker"
+
+# print(verify_transaction(signed_trans))
 
 # print(signed_trans.origin_public_key)
 # print("~~~~~~~~~~~~~~")
