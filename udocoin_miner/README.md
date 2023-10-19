@@ -2,10 +2,30 @@
 
 Navigate to directory /udocoin/udocoin_miner
 
-run docker-compose to start application
+run start-files
 
+Windows
 ```sh
-docker-compose up --build --scale app=1
+.\start.ps1
+```
+
+Linux
+```sh
+.\start.sh
+```
+
+## OR
+
+run docker-compose with variables
+
+Windows
+```sh
+$env:SEED_SERVER = "<[y/n]>"; $env:PUBKEY = "<public_key>"; docker-compose up --build --scale app=1
+```
+
+Linux
+```sh
+SEED_SERVER=<[y/n]> PUBKEY=<public_key> docker-compose up --build --scale app=1
 ```
 
 stop Docker-compose to stop application
