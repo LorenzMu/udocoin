@@ -21,11 +21,12 @@ class UdocoinMiner:
         data = self.update_mempool()
         #for now use static data
         data = static_data()
+        print(data)
         new_block = Block(data=data, proof_of_work=new_PoW, prev_hash=prev_hash, index=new_index, 
                         block_author_public_key=get_pub_key_string("pub_key.txt"),
                         block_value=self.blockchain_instance.get_block_value(new_index))
 
-        self.blockchain_instance.blockchain.append(new_block)
+        self.blockchain_instance.update_blockchain(block= new_block)
         return new_block
 
     def generate_proof_of_work(self, previous_PoW: int, index: int) -> int:
@@ -57,6 +58,7 @@ def static_data():
     return BlockData([signed_trans])
 
 my_miner = UdocoinMiner(proof_to_start_with=1000)
-for i in  range(150):
+for i in  range(10):
     my_miner.mine_block()
 print(my_miner.blockchain_instance.blockchain[-3:])
+print(my_miner.blockchain_instance.balances)

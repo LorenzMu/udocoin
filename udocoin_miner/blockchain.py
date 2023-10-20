@@ -1,17 +1,24 @@
 import datetime
 import hashlib
 import json
-from udocoin_dataclasses import Block, BlockData, TransactionData
+from udocoin_dataclasses import Block, BlockData, TransactionData, AccountBalance
 
 class Blockchain:
     def __init__(self):
         #If no blockchain is found in the network, create your own blockchain 
-        self.blockchain = []
+        self.blockchain: list[Block] = []
+        self.balances: dict[str, float] = {}
 
         if self.find_consensus_blockchain() == None:
             genesis_block = Block(data = BlockData(transaction_list=[TransactionData("root","udos_wallet",str(datetime.datetime.now()),50.2)]),
                                   proof_of_work= 1, prev_hash= "0", index = 1)
-            self.blockchain.append(genesis_block)
+            self.update_blockchain(genesis_block)
+
+    def update_blockchain(self, block: Block):
+        self.blockchain.append(block)
+        #if len(self.blockchain)%100 == 0:
+        if len(self.blockchain) > 1:
+            self.update_balances(index_start = (len(self.blockchain)-1))
     
     #Do some arbitrary math to "work" the system
     def generate_pre_hash(self, new_proof: int, previous_proof: int, index: int) -> str:
@@ -72,6 +79,34 @@ class Blockchain:
         #If no consensus blockchain is found, create your own in __init__
         else:
             return None
+    
+    def update_balances(self, index_start):
+        new_balances = self.balances
+        for block in self.blockchain[index_start:]:
+            #Get Block values summed per public key
+            balance_from_mining = AccountBalance(block.block_author_public_key, block.block_value)
+            if block.block_author_public_key in new_balances.keys():
+                new_balances[block.block_author_public_key] += block.block_value
+            else:
+                new_balances[block.block_author_public_key] = block.block_value
+
+            print("NEW BALANCES: ", new_balances)
+            #Subtract and add balances for each transaction in each block
+            for signed_transaction in block.data.transaction_list:
+                message = TransactionData(**json.loads(signed_transaction.message))
+                if signed_transaction.origin_public_key in new_balances.keys():
+                    print("IN BALANCE LIST")
+                    if new_balances[signed_transaction.origin_public_key] >= message.amount:
+                        print("IN BALANCE LIST2")
+
+                        new_balances[signed_transaction.origin_public_key] -= message.amount
+                        if message.destination_public_key in new_balances.keys():
+                            print("IN BALANCE LIST3")
+                            new_balances[message.destination_public_key] += message.amount
+                        else:
+                            new_balances[message.destination_public_key] = message.amount
+            
+        self.balances = new_balances
         
         
 
