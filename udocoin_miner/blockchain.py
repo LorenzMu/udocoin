@@ -11,18 +11,24 @@ class Blockchain:
 
         if self.find_consensus_blockchain() == None:
             genesis_block = Block(data = BlockData(transaction_list=[TransactionData("root","udos_wallet",str(datetime.datetime.now()),50.2)]),
-                                  proof_of_work= 1, prev_hash= "0", index = 1)
+                                  proof_of_work= 1, prev_hash= "0", index = 0)
             self.update_blockchain(genesis_block)
 
     def update_blockchain(self, block: Block):
         self.blockchain.append(block)
-        #if len(self.blockchain)%100 == 0:
+        print("appending new block with prev_hash:", block.prev_hash)
+        print("This block's hash is: ", self.hash(block))
+        #If blockchain no longer valid: Remove newly appended block
         if len(self.blockchain) > 1:
+            if not self.validate_blockchain():
+                self.blockchain.pop()
+                raise Exception("Blockchain not valid, block rejected!")
+            #if len(self.blockchain)%100 == 0:
             self.update_balances(index_start = (len(self.blockchain)-1))
     
     #Do some arbitrary math to "work" the system
-    def generate_pre_hash(self, new_proof: int, previous_proof: int, index: int) -> str:
-        pre_hash = str((((new_proof ** 3) + 1) * ((previous_proof**3)+1)) + index)
+    def generate_pre_hash(self, new_proof: int, previous_proof: int, index: int, data: str) -> str:
+        pre_hash = str((((new_proof ** 3) + 1) * ((previous_proof**3)+1)) + index) + str(data)
         return pre_hash.encode()
 
     def hash(self, block: Block) -> str:
@@ -34,22 +40,25 @@ class Blockchain:
 
         while block_index < len(self.blockchain):
             block = self.blockchain[block_index]
-            # Check if the previous hash of the current block is the same as the hash of it's previous block
-            if block.prev_hash != self.hash(previous_block):
+            # Check if the previous hash of the current block is the same as the hash of its previous block
+            if block.prev_hash != self.hash(previous_block) and previous_block != self.blockchain[0]:
+                raise Exception("Wrong previous hash detected, block rejected!")
                 return False
 
             previous_proof = previous_block.proof_of_work
-            index, data, proof_of_work = block.index, block.data, block.proof_of_work
+            index, previous_data, proof_of_work = block.index, previous_block.data, block.proof_of_work
             hash_operation = hashlib.sha256(
                 self.generate_pre_hash(
                     new_proof=proof_of_work,
                     previous_proof=previous_proof,
                     index=index,
-                    data=data,
+                    data=previous_data
                 )
             ).hexdigest()
 
-            if hash_operation[:4] != "0000":
+            if hash_operation[:4] != "0000" and index > 1:
+                print(hash_operation)
+                raise Exception("Invalid proof of work detected, block rejected!")
                 return False
 
             previous_block = block
@@ -62,8 +71,7 @@ class Blockchain:
 
     #Exponential block value decay
     def get_block_value(self, index):
-        return 1024 / (2**((index//100)))
-
+        return 1024 / (2**(index//100))
     
     #Here is where we will access our decentralized P2P network to find our consensus blockchain
     #Maybe refactor into different class
@@ -90,22 +98,23 @@ class Blockchain:
             else:
                 new_balances[block.block_author_public_key] = block.block_value
 
-            print("NEW BALANCES: ", new_balances)
             #Subtract and add balances for each transaction in each block
             for signed_transaction in block.data.transaction_list:
                 message = TransactionData(**json.loads(signed_transaction.message))
                 if signed_transaction.origin_public_key in new_balances.keys():
-                    print("IN BALANCE LIST")
                     if new_balances[signed_transaction.origin_public_key] >= message.amount:
-                        print("IN BALANCE LIST2")
-
                         new_balances[signed_transaction.origin_public_key] -= message.amount
                         if message.destination_public_key in new_balances.keys():
-                            print("IN BALANCE LIST3")
                             new_balances[message.destination_public_key] += message.amount
                         else:
                             new_balances[message.destination_public_key] = message.amount
-            
+                    else:
+                        self.blockchain.pop()
+                        raise Exception("Account Balance of Origin Adress too low! Block rejected!")
+                else:
+                    self.blockchain.pop()
+                    raise Exception("Origin Address not found. Block rejected!")
+
         self.balances = new_balances
         
         

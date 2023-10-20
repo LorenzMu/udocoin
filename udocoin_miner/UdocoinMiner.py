@@ -13,28 +13,27 @@ class UdocoinMiner:
     def mine_block(self) -> Block:
         previous_block = self.blockchain_instance.get_previous_block()
         previous_PoW = previous_block.proof_of_work
-        new_index = len(self.blockchain_instance.blockchain) + 1 
-        new_PoW = self.generate_proof_of_work(previous_PoW=previous_PoW, index=new_index)
+        new_index = len(self.blockchain_instance.blockchain) 
+        new_PoW = self.generate_proof_of_work(previous_PoW=previous_PoW, index=new_index, data= self.blockchain_instance.blockchain[-1].data)
         prev_hash = self.blockchain_instance.hash(previous_block)
 
         #when a mempool exists in the future, update it
         data = self.update_mempool()
         #for now use static data
         data = static_data()
-        print(data)
         new_block = Block(data=data, proof_of_work=new_PoW, prev_hash=prev_hash, index=new_index, 
                         block_author_public_key=get_pub_key_string("pub_key.txt"),
                         block_value=self.blockchain_instance.get_block_value(new_index))
 
-        self.blockchain_instance.update_blockchain(block= new_block)
+        self.blockchain_instance.update_blockchain(block = new_block)
         return new_block
 
-    def generate_proof_of_work(self, previous_PoW: int, index: int) -> int:
+    def generate_proof_of_work(self, previous_PoW: int, index: int, data: str) -> int:
         new_proof = self.proof_to_start_with
         check_proof = False
 
         while not check_proof:
-            data_to_hash = self.blockchain_instance.generate_pre_hash(new_proof, previous_PoW, index)
+            data_to_hash = self.blockchain_instance.generate_pre_hash(new_proof, previous_PoW, index, data)
             hash_operation = hashlib.sha256(data_to_hash).hexdigest()
             #If last four digits of the hash are "0", the proof is accepted
             if hash_operation[:4]== "0000":
@@ -58,7 +57,7 @@ def static_data():
     return BlockData([signed_trans])
 
 my_miner = UdocoinMiner(proof_to_start_with=1000)
-for i in  range(10):
+for i in range(10):
     my_miner.mine_block()
 print(my_miner.blockchain_instance.blockchain[-3:])
 print(my_miner.blockchain_instance.balances)
