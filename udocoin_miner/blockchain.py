@@ -61,6 +61,10 @@ class Blockchain:
                 raise Exception("Invalid proof of work detected, block rejected!")
                 return False
 
+            if block.block_value  != self.get_block_value(index):
+                raise Exception("Wrong block value detected, block rejected!")
+                return False
+
             previous_block = block
             block_index += 1
 

@@ -61,3 +61,5 @@ for i in range(10):
     my_miner.mine_block()
 print(my_miner.blockchain_instance.blockchain[-3:])
 print(my_miner.blockchain_instance.balances)
+#my_miner.blockchain_instance.blockchain[3].data.transaction_list[0].signature = 
+#my_miner.blockchain_instance.validate_blockchain()
