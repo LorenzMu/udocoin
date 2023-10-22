@@ -57,9 +57,15 @@ def static_data():
     return BlockData([signed_trans])
 
 my_miner = UdocoinMiner(proof_to_start_with=1000)
-for i in range(10):
+for i in range(3):
     my_miner.mine_block()
 print(my_miner.blockchain_instance.blockchain[-3:])
 print(my_miner.blockchain_instance.balances)
 #my_miner.blockchain_instance.blockchain[3].data.transaction_list[0].signature = 
 #my_miner.blockchain_instance.validate_blockchain()
+with open("blockchain_export.txt", "w") as file:
+    file.write(my_miner.blockchain_instance.export_blockchain())
+
+with open("blockchain_export.txt", "r") as file:
+    my_miner.blockchain_instance.import_blockchain(file.read())
+ 

@@ -1,7 +1,9 @@
 import datetime
 import hashlib
 import json
-from udocoin_dataclasses import Block, BlockData, TransactionData, AccountBalance
+from udocoin_dataclasses import Block, BlockData, TransactionData, AccountBalance, SignedTransaction
+import dataclasses
+from base64 import b64encode
 
 class Blockchain:
     def __init__(self):
@@ -10,7 +12,7 @@ class Blockchain:
         self.balances: dict[str, float] = {}
 
         if self.find_consensus_blockchain() == None:
-            genesis_block = Block(data = BlockData(transaction_list=[TransactionData("root","udos_wallet",str(datetime.datetime.now()),50.2)]),
+            genesis_block = Block(data = BlockData(transaction_list=[]),
                                   proof_of_work= 1, prev_hash= "0", index = 0)
             self.update_blockchain(genesis_block)
 
@@ -20,7 +22,7 @@ class Blockchain:
         print("This block's hash is: ", self.hash(block))
         #If blockchain no longer valid: Remove newly appended block
         if len(self.blockchain) > 1:
-            if not self.validate_blockchain():
+            if not self.validate_blockchain(self.blockchain):
                 self.blockchain.pop()
                 raise Exception("Blockchain not valid, block rejected!")
             #if len(self.blockchain)%100 == 0:
@@ -34,14 +36,14 @@ class Blockchain:
     def hash(self, block: Block) -> str:
         return hashlib.sha256(str(block).encode()).hexdigest()
 
-    def validate_blockchain(self) -> bool:
-        previous_block = self.blockchain[0]
+    def validate_blockchain(self, blockchain: list[Block]) -> bool:
+        previous_block = blockchain[0]
         block_index = 1
 
-        while block_index < len(self.blockchain):
-            block = self.blockchain[block_index]
+        while block_index < len(blockchain):
+            block = blockchain[block_index]
             # Check if the previous hash of the current block is the same as the hash of its previous block
-            if block.prev_hash != self.hash(previous_block) and previous_block != self.blockchain[0]:
+            if block.prev_hash != self.hash(previous_block) and previous_block != blockchain[0]:
                 raise Exception("Wrong previous hash detected, block rejected!")
                 return False
 
@@ -120,8 +122,35 @@ class Blockchain:
                     raise Exception("Origin Address not found. Block rejected!")
 
         self.balances = new_balances
+
+    def export_blockchain(self):
+        if self.validate_blockchain(self.blockchain):
+            exported_blockchain = self.blockchain
+            for block in exported_blockchain:
+                for signed_transaction in block.data.transaction_list:
+                    if signed_transaction is not None:
+                        signed_transaction.origin_public_key = signed_transaction.origin_public_key.decode("utf-8")
+                        #signed_transaction.signature = signed_transaction.signature.decode("utf-8")
+                        signed_transaction.signature = b64encode(signed_transaction.signature).decode('utf-8')
+                        signed_transaction.message = signed_transaction.message.decode("utf-8")
+                if block.block_author_public_key is not None:
+                    block.block_author_public_key = block.block_author_public_key.decode("utf-8")
+    
+            return json.dumps(self.blockchain, cls=EnhancedJSONEncoder)
+        else:
+            raise Exception("Export failed due to invalid blockchain!")
+    
+    def import_blockchain(self, blockchain: bytes):
+        loaded_blockchain = json.loads(str(blockchain))
+        if self.validate_blockchain(loaded_blockchain):
+            return loaded_blockchain
         
         
+class EnhancedJSONEncoder(json.JSONEncoder):
+        def default(self, o):
+            if dataclasses.is_dataclass(o):
+                return dataclasses.asdict(o)
+            return super().default(o)
 
 # my_blockchain = Blockchain(proof_to_start_with=1)
 # my_blockchain.mine_block(BlockData(transaction_list=[TransactionData("udos_wallet","seans_wallet",str(datetime.datetime.now()),50.2)]))
