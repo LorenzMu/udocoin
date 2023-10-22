@@ -135,16 +135,8 @@ dist
 #pycache
 *.pyc
 *.pyo
-__pycache__/
+/**/__pycache__/
 
-
-#keys
-/priv_key.txt
-/pub_key.txt
-
-#vscode
-.vscode
-
-# tests
 /test
-
+/venv
+.gitignore
