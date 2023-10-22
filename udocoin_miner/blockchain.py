@@ -3,7 +3,9 @@ import hashlib
 import json
 from udocoin_dataclasses import Block, BlockData, TransactionData, AccountBalance, SignedTransaction
 import dataclasses
-from base64 import b64encode
+from base64 import b64encode, b64decode
+import dacite
+from copy import deepcopy
 
 class Blockchain:
     def __init__(self):
@@ -125,7 +127,7 @@ class Blockchain:
 
     def export_blockchain(self):
         if self.validate_blockchain(self.blockchain):
-            exported_blockchain = self.blockchain
+            exported_blockchain = deepcopy(self.blockchain)
             for block in exported_blockchain:
                 for signed_transaction in block.data.transaction_list:
                     if signed_transaction is not None:
@@ -136,13 +138,32 @@ class Blockchain:
                 if block.block_author_public_key is not None:
                     block.block_author_public_key = block.block_author_public_key.decode("utf-8")
     
-            return json.dumps(self.blockchain, cls=EnhancedJSONEncoder)
+            return json.dumps(exported_blockchain, cls=EnhancedJSONEncoder)
         else:
             raise Exception("Export failed due to invalid blockchain!")
+
+
     
-    def import_blockchain(self, blockchain: bytes):
-        loaded_blockchain = json.loads(str(blockchain))
-        if self.validate_blockchain(loaded_blockchain):
+    def import_blockchain(self, blockchain):
+        loaded_blockchain = json.loads(blockchain)
+        imported_blockchain = []
+
+        for block in loaded_blockchain:
+            imported_blockchain.append(dacite.from_dict(data_class=Block, data={k: v for k, v in block.items() if v is not None}))
+
+        for block in imported_blockchain:
+                for signed_transaction in block.data.transaction_list:
+                    if signed_transaction is not None:
+                        signed_transaction.origin_public_key = signed_transaction.origin_public_key.encode('utf-8')
+                        #signed_transaction.signature = signed_transaction.signature.decode("utf-8")
+                        signed_transaction.signature = b64decode(signed_transaction.signature)#.encode('utf-8')
+                        signed_transaction.message = signed_transaction.message.encode('utf-8')
+                if block.block_author_public_key is not None:
+                    block.block_author_public_key = block.block_author_public_key.encode('utf-8')
+        print()
+
+        if self.validate_blockchain(imported_blockchain):
+            print("import succesful!")
             return loaded_blockchain
         
         
