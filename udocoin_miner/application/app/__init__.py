@@ -16,14 +16,15 @@ else:
     PUBKEY_PATH = input("Please insert your public-key path: ")
     
 os.environ["IS_SEED_SERVER"] = "yes" if SEED_SERVER == "y" or SEED_SERVER == "yes" else ""
+os.environ["PUBKEY_PATH"] = PUBKEY_PATH
 # TODO verify pubkey else create new key and notify user
-with open(PUBKEY_PATH,"rb") as pub_key_file:
+with open(PUBKEY_PATH,"r") as pub_key_file:
     os.environ["PUBKEY"] = pub_key_file.read()
     PUBKEY = pub_key_file.read()
 
 from app.blockchain_modules.UdocoinMiner import UdocoinMiner
 
-my_miner = UdocoinMiner(1,PUBKEY)
+my_miner = UdocoinMiner(1)
 
 for i in range(3):
     my_miner.mine_block()

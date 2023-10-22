@@ -1,4 +1,4 @@
-from udocoin_dataclasses import TransactionData, SignedTransaction
+from app.blockchain_modules.udocoin_dataclasses import TransactionData, SignedTransaction
 from json import dumps, loads
 from datetime import datetime
 from dataclasses import asdict
