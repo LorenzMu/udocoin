@@ -160,7 +160,7 @@ class Blockchain:
                         signed_transaction.message = signed_transaction.message.encode('utf-8')
                 if block.block_author_public_key is not None:
                     block.block_author_public_key = block.block_author_public_key.encode('utf-8')
-        print()
+        
 
         if self.validate_blockchain(imported_blockchain):
             print("import succesful!")
