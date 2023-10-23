@@ -1,4 +1,4 @@
-from app import app,server_comm,MINER,MINER_THREAD
+from app import app,server_comm,MINER
 from flask import request,redirect
 import os
 
@@ -12,10 +12,11 @@ def notify_peers():
     data = {"message":message}
     return server_comm.broadcast_data(data)
 
-@app.route("/kill")
+@app.route("/miner/kill")
 def application_kill():
     MINER.stop_mining()
     exit()
+    return redirect("/miner")
 
 @app.route("/miner")
 def miner_index():

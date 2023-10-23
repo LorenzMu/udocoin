@@ -19,13 +19,15 @@ class UdocoinMiner:
 
     def continue_mining(self):
         self.mining = True
-        self.start_mining()
+        self.continuous_mining()
 
     def start_mining(self):
         print("Starting mining... ")
         while self.mining:
             print("Starting mining block... ")
             new_block = self.mine_block()
+            if new_block is None:
+                self.mining = False
             print("Found new Block!!!")
             # TODO handle new_block
 
@@ -44,6 +46,8 @@ class UdocoinMiner:
         previous_PoW = previous_block.proof_of_work
         new_index = len(self.blockchain_instance.blockchain) 
         new_PoW = self.generate_proof_of_work(previous_PoW=previous_PoW, index=new_index, data= self.blockchain_instance.blockchain[-1].data)
+        if new_PoW is None:
+            return None
         prev_hash = self.blockchain_instance.hash(previous_block)
 
         #when a mempool exists in the future, update it
@@ -83,7 +87,7 @@ class UdocoinMiner:
 def static_data():
     pub_key_str = get_pub_key_string(os.environ["PUBKEY_PATH"])
     my_transaction_data = TransactionData(pub_key_str, "my_destination_adress", timestamp=datetime.now(), amount=50)
-    signed_trans = sign_transaction(get_priv_key("priv_key"), pub_key_str, my_transaction_data)
+    signed_trans = sign_transaction(get_priv_key(os.environ["PRIVKEY_PATH"]), pub_key_str, my_transaction_data)
     verify_transaction(signed_trans)
 
     return BlockData([signed_trans])
