@@ -2,6 +2,7 @@ from app.blockchain_modules.blockchain import Blockchain
 from app.blockchain_modules.udocoin_dataclasses import *
 from app.blockchain_modules.transactions import *
 import os
+import threading
 
 #Separate class, because different people may want to implement it differently
 #The blockchain as the central data structure is the consistent class and may not have different implementations
@@ -10,6 +11,33 @@ class UdocoinMiner:
         self.blockchain_instance = Blockchain()
         self.mempool= BlockData([])
         self.proof_to_start_with = proof_to_start_with
+        self.mining = True
+
+    def stop_mining(self):
+        print("Stopping mining...")
+        self.mining = False
+
+    def continue_mining(self):
+        self.mining = True
+        self.start_mining()
+
+    def start_mining(self):
+        print("Starting mining... ")
+        while self.mining:
+            print("Starting mining block... ")
+            new_block = self.mine_block()
+            print("Found new Block!!!")
+            # TODO handle new_block
+
+    def is_mining(self):
+        return self.mining
+
+    def continuous_mining(self):
+        print("Starting thread")
+        mining_thread = threading.Thread(target=self.start_mining)
+        mining_thread.start()
+        print("Thread running")
+
 
     def mine_block(self) -> Block:
         previous_block = self.blockchain_instance.get_previous_block()
@@ -34,6 +62,8 @@ class UdocoinMiner:
         check_proof = False
 
         while not check_proof:
+            if not self.mining: # cancel mining if stopped
+                return None
             data_to_hash = self.blockchain_instance.generate_pre_hash(new_proof, previous_PoW, index, data)
             hash_operation = hashlib.sha256(data_to_hash).hexdigest()
             #If last four digits of the hash are "0", the proof is accepted

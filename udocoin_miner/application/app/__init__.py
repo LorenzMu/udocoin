@@ -2,6 +2,7 @@ from flask import Flask
 from flask_cors import CORS
 from flask_socketio import SocketIO
 import os
+import threading,time
 
 SEED_SERVER = ""
 PUBKEY = ""
@@ -24,18 +25,20 @@ with open(PUBKEY_PATH,"r") as pub_key_file:
 
 from app.blockchain_modules.UdocoinMiner import UdocoinMiner
 
-my_miner = UdocoinMiner(1)
 
-for i in range(3):
-    my_miner.mine_block()
-print(my_miner.blockchain_instance.blockchain[-3:])
-print(my_miner.blockchain_instance.balances)
-#my_miner.blockchain_instance.blockchain[3].data.transaction_list[0].signature = 
-#my_miner.blockchain_instance.validate_blockchain()
-with open("blockchain_export.txt", "w") as file:
-    file.write(my_miner.blockchain_instance.export_blockchain())
-# with open("blockchain_export.txt", "r") as file:
-    # my_miner.blockchain_instance.import_blockchain(file.read())
+MINER = UdocoinMiner(1)
+MINER_THREAD = MINER.continuous_mining()
+
+# for i in range(3):
+#     my_miner.mine_block()
+# print(my_miner.blockchain_instance.blockchain[-3:])
+# print(my_miner.blockchain_instance.balances)
+# #my_miner.blockchain_instance.blockchain[3].data.transaction_list[0].signature = 
+# #my_miner.blockchain_instance.validate_blockchain()
+# with open("blockchain_export.txt", "w") as file:
+#     file.write(my_miner.blockchain_instance.export_blockchain())
+# # with open("blockchain_export.txt", "r") as file:
+#     # my_miner.blockchain_instance.import_blockchain(file.read())
 
 app = Flask(__name__)
 app.config.from_object("config.DevelopmentConfig")
