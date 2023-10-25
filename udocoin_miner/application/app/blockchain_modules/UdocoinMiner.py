@@ -55,7 +55,7 @@ class UdocoinMiner:
         #for now use static data
         data = static_data()
         new_block = Block(data=data, proof_of_work=new_PoW, prev_hash=prev_hash, index=new_index, 
-                        block_author_public_key=get_pub_key_string(os.environ["PUBKEY_PATH"]),
+                        block_author_public_key=get_pub_key_string(),
                         block_value=self.blockchain_instance.get_block_value(new_index))
 
         self.blockchain_instance.update_blockchain(block = new_block)
@@ -76,7 +76,7 @@ class UdocoinMiner:
             else:
                 new_proof += 1
         
-        print(new_proof)
+        # print(new_proof)
 
         return new_proof
 
@@ -85,9 +85,9 @@ class UdocoinMiner:
         return None
 
 def static_data():
-    pub_key_str = get_pub_key_string(os.environ["PUBKEY_PATH"])
+    pub_key_str = get_pub_key_string()
     my_transaction_data = TransactionData(pub_key_str, "my_destination_adress", timestamp=datetime.now(), amount=50)
-    signed_trans = sign_transaction(get_priv_key(os.environ["PRIVKEY_PATH"]), pub_key_str, my_transaction_data)
+    signed_trans = sign_transaction(get_priv_key(), pub_key_str, my_transaction_data)
     verify_transaction(signed_trans)
 
     return BlockData([signed_trans])

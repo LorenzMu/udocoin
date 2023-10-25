@@ -40,7 +40,7 @@ function SetPrivkeyVariable {
         $PRIVKEY_CONTENT = Get-Content -Path $PRIVKEY_PATH -Encoding UTF8
         [Environment]::SetEnvironmentVariable("PRIVKEY", $PRIVKEY_CONTENT, [System.EnvironmentVariableTarget]::User)
         
-        Write-Host $PRIVKEY_PATH
+        # Write-Host $PRIVKEY_PATH
         # Write-Host $PRIVKEY_CONTENT
         return $PRIVKEY_CONTENT
     } catch {
@@ -60,7 +60,7 @@ function SetPubkeyVariable {
         $PUBKEY_CONTENT = Get-Content -Path $PUBKEY_PATH -Encoding UTF8
         [Environment]::SetEnvironmentVariable("PUBKEY", $PUBKEY_CONTENT, [System.EnvironmentVariableTarget]::User)
         
-        Write-Host $PUBKEY_PATH
+        # Write-Host $PUBKEY_PATH
         # Write-Host $PUBKEY_CONTENT
         return $PUBKEY_CONTENT
     } catch {
