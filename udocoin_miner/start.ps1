@@ -30,7 +30,9 @@ function PromptForKeys {
 
 function SetPrivkeyVariable {
     try {
-        $PRIVKEY_PATH = Read-Host "Please insert the path to your private-key"
+        $PRIVKEY_PATH = "$($home)\.udocoin\priv_key"
+        $PRIVKEY_PATH_INPUT = Read-Host "Please insert the path to your private-key or skip for default" [$($PRIVKEY_PATH)]
+        $PRIVKEY_PATH = ($PRIVKEY_PATH,$PRIVKEY_PATH_INPUT)[[bool]$PRIVKEY_PATH_INPUT]
         if (-Not (Test-Path $PRIVKEY_PATH)) {
             Write-Host "File not found: $PRIVKEY_PATH"
             return SetPrivkeyVariable
@@ -38,6 +40,7 @@ function SetPrivkeyVariable {
         $PRIVKEY_CONTENT = Get-Content -Path $PRIVKEY_PATH -Encoding UTF8
         [Environment]::SetEnvironmentVariable("PRIVKEY", $PRIVKEY_CONTENT, [System.EnvironmentVariableTarget]::User)
         
+        Write-Host $PRIVKEY_PATH
         # Write-Host $PRIVKEY_CONTENT
         return $PRIVKEY_CONTENT
     } catch {
@@ -47,7 +50,9 @@ function SetPrivkeyVariable {
 
 function SetPubkeyVariable {
     try {
-        $PUBKEY_PATH = Read-Host "Please insert the path to your public-key"
+        $PUBKEY_PATH = "$($home)\.udocoin\pub_key.pub"
+        $PUBKEY_PATH_INPUT = Read-Host "Please insert the path to your public-key or skip for default" [$($PUBKEY_PATH)]
+        $PUBKEY_PATH = ($PUBKEY_PATH,$PUBKEY_PATH_INPUT)[[bool]$PUBKEY_PATH_INPUT]
         if (-Not (Test-Path $PUBKEY_PATH)) {
             Write-Host "File not found: $PUBKEY_PATH"
             return SetPubkeyVariable
@@ -55,6 +60,7 @@ function SetPubkeyVariable {
         $PUBKEY_CONTENT = Get-Content -Path $PUBKEY_PATH -Encoding UTF8
         [Environment]::SetEnvironmentVariable("PUBKEY", $PUBKEY_CONTENT, [System.EnvironmentVariableTarget]::User)
         
+        Write-Host $PUBKEY_PATH
         # Write-Host $PUBKEY_CONTENT
         return $PUBKEY_CONTENT
     } catch {
