@@ -2,12 +2,6 @@ FROM python:3.10
 
 ENV SKIP_ENV_INPUT="yes"
 
-RUN echo $PUBKEY
-
-RUN echo $PRIVKEY
-
-RUN echo $SEED_SERVER
-
 WORKDIR /application
 
 COPY ./requirements.txt /application
