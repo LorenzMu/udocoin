@@ -1,7 +1,7 @@
 import datetime
 import hashlib
 import json
-from udocoin_dataclasses import Block, BlockData, TransactionData, AccountBalance, SignedTransaction
+from app.blockchain_modules.udocoin_dataclasses import Block, BlockData, TransactionData, AccountBalance, SignedTransaction
 import dataclasses
 from base64 import b64encode, b64decode
 import dacite
@@ -60,7 +60,7 @@ class Blockchain:
                 )
             ).hexdigest()
 
-            if hash_operation[:8] != "00000000" and index > 1:
+            if hash_operation[:5] != "00000" and index > 1:
                 print(hash_operation)
                 raise Exception("Invalid proof of work detected, block rejected!")
                 return False

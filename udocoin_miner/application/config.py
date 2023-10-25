@@ -10,7 +10,7 @@ class ProductionConfig(Config):
     SECRET_KEY = os.urandom(12).hex()
 
 class DevelopmentConfig(Config):
-    DEBUG = True
+    TESTING = True
     SESSION_COOKIE_SECURE = False
 
 class TestingConfig(Config):

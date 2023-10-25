@@ -9,6 +9,7 @@ lerna-debug.log*
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+*export.txt
 
 # Runtime data
 pids
@@ -141,6 +142,8 @@ __pycache__/
 #keys
 /priv_key.txt
 /pub_key.txt
+*.pub
+priv_key
 
 #vscode
 .vscode

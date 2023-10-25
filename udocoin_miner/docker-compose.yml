@@ -4,9 +4,6 @@ services:
   app:
     build: 
       context: application
-      args:
-        - SEED_SERVER=${SEED_SERVER}
-        - PUBKEY=${PUBKEY}
     ports:
       - "5000"
     restart: always
@@ -15,6 +12,7 @@ services:
     environment:
       - SEED_SERVER=${SEED_SERVER}
       - PUBKEY=${PUBKEY}
+      - PRIVKEY=${PRIVKEY}
 
   nginx:
     image: nginx:latest
