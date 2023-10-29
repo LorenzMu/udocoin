@@ -2,6 +2,8 @@ from app import app,server_comm,MINER
 from flask import request,redirect
 import os
 
+from app.blockchain_modules.consensus_tests import consensus_test
+
 @app.route("/",methods=["GET"])
 def index():
     return f"Running healthy as {'Seed' if os.environ['IS_SEED_SERVER'] else 'Peer'}-Server"
@@ -36,3 +38,8 @@ def miner_stop():
 def miner_continue():
     MINER.continue_mining()
     return redirect("/miner")
+
+@app.route("/consensus_test",methods=["GET"])
+def cons_test():
+    consensus_test()
+    return "Ran consesnsus test, check console for more information"

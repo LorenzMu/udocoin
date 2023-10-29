@@ -151,3 +151,6 @@ priv_key
 # tests
 /test
 
+/venv
+/udocoin_miner/venv
+

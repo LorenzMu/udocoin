@@ -51,6 +51,7 @@ from app.blockchain_modules.UdocoinMiner import UdocoinMiner
 
 MINER = UdocoinMiner(1)
 MINER_THREAD = MINER.continuous_mining()
+MINER.stop_mining()
 
 app = Flask(__name__)
 app.config.from_object("config.DevelopmentConfig")
