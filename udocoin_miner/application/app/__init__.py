@@ -1,8 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
 from flask_socketio import SocketIO
-import os,pathlib
-import threading,time
+import os,pathlib,json
 
 SEED_SERVER = ""
 PUBKEY = ""
@@ -23,7 +22,7 @@ def getPubkey():
 def getPrivkey():
     # default path
     PRIVKEY_PATH = os.path.join(os.path.expanduser("~"),".udocoin","priv_key")
-    privkey_path_input = input("Please insert the path to your private-keyor skip for default: ")
+    privkey_path_input = input("Please insert the path to your private-key or skip for default: ")
     PRIVKEY_PATH = privkey_path_input if privkey_path_input != "" else PRIVKEY_PATH
     if not os.path.exists(PRIVKEY_PATH):
         print(f'File not found: {PRIVKEY_PATH}')
@@ -47,6 +46,17 @@ os.environ["PUBKEY"] = PUBKEY
 os.environ["PRIVKEY"] = PRIVKEY
 # TODO verify pubkey else create new key and notify user
 
+'''
+update known seed server ips
+'''
+from app import server_comm as server_comm
+
+os.environ["known_seeds"] = open(os.path.join(pathlib.Path(__file__).parent.parent.parent,"seeds.json")) if "known_seeds" not in os.environ.keys() else os.environ["known_seeds"]
+server_comm.update_known_seeds()
+
+if os.environ["IS_SEED_SERVER"]:
+    pass
+
 from app.blockchain_modules.UdocoinMiner import UdocoinMiner
 
 MINER = UdocoinMiner(1)
@@ -61,4 +71,3 @@ CORS(app)
 socketio = SocketIO(app)
 
 from app import endpoints
-from app import server_comm as server_comm

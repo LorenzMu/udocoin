@@ -12,6 +12,8 @@ def notify_peers():
     data = {"message":message}
     return server_comm.broadcast_data(data)
 
+''' miner '''
+
 @app.route("/miner/kill")
 def application_kill():
     MINER.stop_mining()
@@ -22,10 +24,16 @@ def application_kill():
 def miner_index():
     output = f'''
 <p>Is currently mining: {MINER.is_mining()}</p>
-<p><a href="/miner/stop">stop mining</a></p>
-<p><a href="/miner/continue">continue mining</a></p>
+<p>Mining with prublic key: {os.environ["PUBKEY"]}</p>
+<p><a href="/miner/stop">stop mining</a> | <a href="/miner/continue">continue mining</a></p>
 '''
     return output
+
+@app.route("/miner/blockchain")
+def miner_get_blockchain():
+    chain = MINER.blockchain_instance.export_blockchain()
+    length = len(chain)
+    return f"<p>Number of Blocks: {str(length)}</p><p>{str(chain)}</p>"
 
 @app.route("/miner/stop")
 def miner_stop():
