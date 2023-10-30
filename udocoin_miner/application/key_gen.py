@@ -9,7 +9,7 @@ import os,sys
 
 directory_name = ".udocoin"
 private_key_file_name = "priv_key"
-public_key_file_name = "pub_key.pub"
+public_key_file_name = "pub_key"
 
 def get_directory()->str:
     if os.name == 'nt':  # Windows
@@ -29,7 +29,7 @@ def get_directory()->str:
 def get_filenames(key_directory_path,n=None):
     if n is None:
         private_key_path = os.path.join(key_directory_path,private_key_file_name)
-        public_key_path = os.path.join(key_directory_path,public_key_file_name)
+        public_key_path = os.path.join(key_directory_path,public_key_file_name + ".pub")
         
         if os.path.exists(private_key_path) or os.path.exists(public_key_path):
             return get_filenames(key_directory_path,1)
@@ -37,7 +37,7 @@ def get_filenames(key_directory_path,n=None):
     
     n += 1
     private_key_path = os.path.join(key_directory_path,private_key_file_name + f" ({n})")
-    public_key_path = os.path.join(key_directory_path,public_key_file_name + f" ({n})")
+    public_key_path = os.path.join(key_directory_path,public_key_file_name + f" ({n}).pub")
 
     if os.path.exists(private_key_path) or os.path.exists(public_key_path):
         return get_filenames(key_directory_path,n)
