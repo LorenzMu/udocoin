@@ -4,6 +4,7 @@ from app import socketio,app
 from flask_socketio import emit
 import os,json,pathlib
 import requests
+import socketio as client_socketio
 
 def update_known_seeds():
     received_known_seeds = []
@@ -31,6 +32,27 @@ def update_known_seeds():
 def is_seed_active(ip):
     response = requests.get(f"{ip}/get/is_active")
     return response.status_code == 200
+
+def connect_seed_to_seed(seed_ip):
+    try:
+        client_sio = client_socketio.Client()
+        client_sio.connect(seed_ip)
+        client_sio.emit('connect_seed_to_seed',{"connection_type":"seed-to-seed"})
+        return client_sio
+    except:
+        print(f"Failed connecting to {seed_ip}")
+        return None
+
+def connect_peer_to_seed(seed_ip_list):
+    for seed_ip in seed_ip_list:
+        try:
+            client_sio = client_socketio.Client()
+            client_sio.connect(seed_ip)
+            client_sio.emit('connect_peer_to_seed',{"connection_type":"peer-to-seed"})
+            return client_sio
+        except:
+            pass
+    raise Exception("Could not create connection from peer to any seed server.")
 
 @app.route('/get/seeds')
 def get_seeds():

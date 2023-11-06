@@ -10,7 +10,7 @@ PRIVKEY = ""
 from app.blockchain_modules.transactions import get_priv_key_from_path,get_pub_key_from_path
 
 def getPubkey():
-    # default path
+    # ONLY USED IN DEV ENV
     PUBKEY_PATH = os.path.join(os.path.expanduser("~"),".udocoin","pub_key.pub")
     pubkey_path_input = input("Please insert the path to your public-key or skip for default: ")
     PUBKEY_PATH = pubkey_path_input if pubkey_path_input != "" else PUBKEY_PATH
@@ -20,7 +20,7 @@ def getPubkey():
     return get_pub_key_from_path(PUBKEY_PATH)
 
 def getPrivkey():
-    # default path
+    # ONLY USED IN DEV ENV
     PRIVKEY_PATH = os.path.join(os.path.expanduser("~"),".udocoin","priv_key")
     privkey_path_input = input("Please insert the path to your private-key or skip for default: ")
     PRIVKEY_PATH = privkey_path_input if privkey_path_input != "" else PRIVKEY_PATH
@@ -30,13 +30,12 @@ def getPrivkey():
     return get_priv_key_from_path(PRIVKEY_PATH)
 
 
+# If started from Docker -> get environment variables
 if "SKIP_ENV_INPUT" in os.environ.keys() and os.environ["SKIP_ENV_INPUT"]:
-    # If started from Docker -> get environment variables
     SEED_SERVER = os.environ["SEED_SERVER"]
     PUBKEY = os.environ["PUBKEY"]
     PRIVKEY = os.environ["PRIVKEY"]
-else:
-    # If started locally -> get user input and set variables
+else: # If started locally -> get user input and set variables
     SEED_SERVER = input("Is the server a Seed-Server? [y/n] ")
     PRIVKEY = getPrivkey()
     PUBKEY = getPubkey()
@@ -55,7 +54,19 @@ os.environ["known_seeds"] = open(os.path.join(pathlib.Path(__file__).parent.pare
 server_comm.update_known_seeds()
 
 if os.environ["IS_SEED_SERVER"]:
-    pass
+    # if server is seed server
+    socket_clients = []
+    for seed_ip in json.load(os.environ["known_seeds"]):
+        # connect to all other seed servers with socketio
+        socket_client = server_comm.connect_seed_to_seed(seed_ip)
+        if socket_client is not None:
+            socket_clients.append(socket_client)
+    if len(socket_clients):
+        print("Could not connect to any seed servers.")
+        pass
+else:
+    socket_client = server_comm.connect_peer_to_seed(json.load(os.environ["known_seeds"]))
+
 
 from app.blockchain_modules.UdocoinMiner import UdocoinMiner
 
