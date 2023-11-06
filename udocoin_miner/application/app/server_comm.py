@@ -7,17 +7,26 @@ import requests
 import socketio as client_socketio
 
 def update_known_seeds():
+    print("=========== UPDATING SEEDS FROM SEEDS ============")
     received_known_seeds = []
-    known_seeds = json.load(os.environ["known_seeds"])
+    known_seeds = json.loads(os.environ["known_seeds"])
     known_seeds_ = known_seeds.copy()
     '''Loop through known seeds and request furter seeds'''
+    print("Sending requests to " + str(known_seeds_))
     for ip in known_seeds:
-        response = requests.get(f"{ip}/get/seeds")
-        if response.status_code == 200:
-            '''add seeds to list'''
-            received_known_seeds += response["seeds"]
-        else:
-            '''if seed not active -> remove seed from list'''
+        try:
+            response = requests.get(f'{ip}/get/seeds')
+            if response.status_code == 200:
+                '''add seeds to list'''
+                print("Valid response at ip " + ip)
+                if len(response.json()["seeds"]) > 0:
+                    received_known_seeds += response.json()["seeds"]
+            else:
+                '''if seed not active -> remove seed from list'''
+                print("Invalid status code at ip " + ip)
+                known_seeds_.remove(ip)
+        except:
+            print("Exception at seed " + ip)
             known_seeds_.remove(ip)
     '''remove duplicates'''
     received_known_seeds = list(set(received_known_seeds))
@@ -27,40 +36,53 @@ def update_known_seeds():
             if is_seed_active(ip):
                 known_seeds_.append(ip)
     '''update known seeds in environ'''
-    os.environ["known_seeds"] = known_seeds_
+    print("Updating seed list to " + str(known_seeds_))
+    os.environ["known_seeds"] = json.dumps(known_seeds_)
 
 def is_seed_active(ip):
-    response = requests.get(f"{ip}/get/is_active")
-    return response.status_code == 200
+    try:
+        response = requests.get(f'{ip}/get/is_active')
+        return response.status_code == 200
+    except:
+        return False
 
-def connect_seed_to_seed(seed_ip):
+socket_clients = []
+
+def setup_socket_connections():
+    known_seeds = json.loads(os.environ["known_seeds"])
+    print("Setting up socket-connections to " +str(known_seeds))
+    for seed_ip in known_seeds:
+        print("Setting up socket-connection to " +seed_ip)
+        socket_client = connect_socket_to_seed(
+            seed_ip=seed_ip,
+            connection_type="seed-to-seed" if os.environ["IS_SEED_SERVER"] else "peer-to_seed")
+        if socket_client is not None:
+            global socket_clients
+            socket_clients.append(socket_client)
+            # If server is peer server, only one connection is required
+            if not os.environ["IS_SEED_SERVER"]:
+                print("#########################################################")
+                print("Connection set up successfully to " + seed_ip)
+                print("#########################################################")
+                break
+        else:
+            print("Failed connection to " + seed_ip)
+    # raise exception if no connection could be set up
+    if len(socket_clients) == 0:
+        # raise Exception("Could not create connection from peer to any seed server.")        
+        print("#########################################################")
+        print("Could not create connection from peer to any seed server.")
+        print("#########################################################")
+
+def connect_socket_to_seed(seed_ip:str,connection_type:str):
     try:
         client_sio = client_socketio.Client()
         client_sio.connect(seed_ip)
-        client_sio.emit('connect_seed_to_seed',{"connection_type":"seed-to-seed"})
+        client_sio.emit('connect_to_seed',{"connection_type":connection_type})
         return client_sio
     except:
         print(f"Failed connecting to {seed_ip}")
         return None
-
-def connect_peer_to_seed(seed_ip_list):
-    for seed_ip in seed_ip_list:
-        try:
-            client_sio = client_socketio.Client()
-            client_sio.connect(seed_ip)
-            client_sio.emit('connect_peer_to_seed',{"connection_type":"peer-to-seed"})
-            return client_sio
-        except:
-            pass
-    raise Exception("Could not create connection from peer to any seed server.")
-
-@app.route('/get/seeds')
-def get_seeds():
-    return {"seeds":json.load(os.environ["known_seeds"])}
-
-@app.route('/get/is_active')
-def get_active():
-    return {"active":True}
 
 @app.route("/register",methods=["POST"])
 def register_seed_server():
@@ -73,24 +95,33 @@ def register_seed_server():
     os.environ["known_seeds"] = json.dumps(known_seeds)
     return known_seeds
 
-def broadcast_data(to_seeds:bool,data:dict):
+def broadcast_data(data:dict):
     socketio.emit("broadcast_data",data)
     return data
 
-@socketio.on('client_broadcast')
-def on_client_broadcast(data):
-    return broadcast_data(data)
+@socketio.on('broadcast_data')
+def on_broadcast_data(data):
+    print("Received broadcast message: " + str(data))
 
-@socketio.on('connect_peer_to_seed')
-def on_connection(args):
+@socketio.on('connect_to_seed')
+def on_connect_to_seed(args):
     sid = flask_request.sid
-    args_ = str(args)
-    print(f'[Server] Received connection request')
-    print(f'[Server] Room id: "{sid}"')
-    print(f'[Server] Args: "{args_}"')
-    # respond with successfull connection
+    connection_type = args["connection_type"]
+    print(f'[Seed-Server] Received connection request')
+    print(f'[Seed-Server] Room id: "{sid}"')
+    print(f'[Seed-Server] Connection type: "{connection_type}"')
     emit(
-        "connection_response_seed_to_client",
-        {"data":flask_request.sid,"request_args":args},
+        "connect_to_seed_response",
+        {"room":sid,"connection_type":connection_type},
         room=sid
     )
+
+@socketio.on('connect_to_seed_response')
+def on_connect_to_seed_response(args):
+    sid = flask_request.sid
+    connection_type = args["connection_type"]
+    room = args["room"]
+    print(f'[Peer-Server] Received connection request')
+    print(f'[Peer-Server] sid: "{sid}"')
+    print(f'[Peer-Server] room: "{room}"')
+    print(f'[Peer-Server] Connection type: "{connection_type}"')

@@ -45,40 +45,36 @@ os.environ["PUBKEY"] = PUBKEY
 os.environ["PRIVKEY"] = PRIVKEY
 # TODO verify pubkey else create new key and notify user
 
+app = Flask(__name__)
+app.config.from_object("config.DevelopmentConfig")
+
+CORS(app)
+
+socketio = SocketIO(app)
+
 '''
 update known seed server ips
 '''
 from app import server_comm as server_comm
 
-os.environ["known_seeds"] = open(os.path.join(pathlib.Path(__file__).parent.parent.parent,"seeds.json")) if "known_seeds" not in os.environ.keys() else os.environ["known_seeds"]
+print("=========== LOADING SEEDS FROM ENV/FILE ============")
+if "known_seeds" not in os.environ.keys() or len(json.loads(os.environ["known_seeds"])) == 0:
+    print("Found no seeds in env-variables")
+    o = json.load(open(os.path.join(pathlib.Path(__file__).parent.parent,"seeds.json")))
+    str = json.dumps(o)
+    os.environ["known_seeds"] = str
+    print("Found seeds in local file: " + str)
+else:
+    print("Found seeds in env-variables: " + os.environ["known_seeds"])
+
 server_comm.update_known_seeds()
 
-if os.environ["IS_SEED_SERVER"]:
-    # if server is seed server
-    socket_clients = []
-    for seed_ip in json.load(os.environ["known_seeds"]):
-        # connect to all other seed servers with socketio
-        socket_client = server_comm.connect_seed_to_seed(seed_ip)
-        if socket_client is not None:
-            socket_clients.append(socket_client)
-    if len(socket_clients):
-        print("Could not connect to any seed servers.")
-        pass
-else:
-    socket_client = server_comm.connect_peer_to_seed(json.load(os.environ["known_seeds"]))
+server_comm.setup_socket_connections()
 
 
 from app.blockchain_modules.UdocoinMiner import UdocoinMiner
 
 MINER = UdocoinMiner(1)
 MINER_THREAD = MINER.continuous_mining()
-
-app = Flask(__name__)
-app.config.from_object("config.DevelopmentConfig")
-
-print("App initialized...")
-CORS(app)
-
-socketio = SocketIO(app)
 
 from app import endpoints

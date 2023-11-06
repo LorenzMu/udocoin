@@ -1,6 +1,6 @@
 from app import app,server_comm,MINER
 from flask import request,redirect
-import os
+import os,json
 
 @app.route("/",methods=["GET"])
 def index():
@@ -11,6 +11,15 @@ def notify_peers():
     message = request.args.get("message") if request.args.get("message") else "No message provided."
     data = {"message":message}
     return server_comm.broadcast_data(data)
+
+
+@app.route('/get/seeds')
+def get_seeds():
+    return {"seeds":json.loads(os.environ["known_seeds"])}
+
+@app.route('/get/is_active')
+def get_active():
+    return {"active":True}
 
 ''' miner '''
 
