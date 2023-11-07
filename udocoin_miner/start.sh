@@ -88,9 +88,9 @@ export SEED_SERVER="$SEED_SERVER"
 
 # python test.py
 
-echo "$PRIVKEY_CONTENT"
-echo "$PUBKEY_CONTENT"
-echo "$SEED_SERVER"
+# echo "$PRIVKEY_CONTENT"
+# echo "$PUBKEY_CONTENT"
+# echo "$SEED_SERVER"
 
 # Build docker containers
-# docker-compose up --build
+docker-compose up --build
