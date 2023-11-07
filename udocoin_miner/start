@@ -6,7 +6,7 @@ function prompt_for_keys {
 
     if [[ "$private_key_response" == "n" ]]; then
         # If venv/Scripts/Activate.ps1 does not exist
-        if [ ! -f "application/venv/Scripts/activate" ]; then
+        if [ ! -f "application/venv/Scripts/Activate.ps1" ]; then
             python -m venv application/venv
         fi
 
@@ -30,41 +30,33 @@ function prompt_for_keys {
 }
 
 function set_privkey_variable {
-    try {
-        PRIVKEY_PATH="$HOME/.udocoin/priv_key"
-        read -p "Please insert the path to your private-key or skip for default [$PRIVKEY_PATH]: " privkey_path_input
-        PRIVKEY_PATH="${PRIVKEY_PATH:-$privkey_path_input}"
+    PRIVKEY_PATH="$HOME/.udocoin/priv_key"
+    read -p "Please insert the path to your private-key or skip for default [$PRIVKEY_PATH]: " privkey_path_input
+    PRIVKEY_PATH="${PRIVKEY_PATH:-$privkey_path_input}"
 
-        if [ ! -f "$PRIVKEY_PATH" ]; then
-            echo "File not found: $PRIVKEY_PATH"
-            set_privkey_variable
-        fi
+    if [ ! -f "$PRIVKEY_PATH" ]; then
+        echo "File not found: $PRIVKEY_PATH"
+        set_privkey_variable
+    fi
 
-        PRIVKEY_CONTENT=$(cat "$PRIVKEY_PATH")
-        export PRIVKEY="$PRIVKEY_CONTENT"
-        return $PRIVKEY_CONTENT
-    } catch {
-        echo "Error: $_"
-    }
+    PRIVKEY_CONTENT=$(cat "$PRIVKEY_PATH")
+    export PRIVKEY="$PRIVKEY_CONTENT"
+    return $PRIVKEY_CONTENT
 }
 
 function set_pubkey_variable {
-    try {
-        PUBKEY_PATH="$HOME/.udocoin/pub_key.pub"
-        read -p "Please insert the path to your public-key or skip for default [$PUBKEY_PATH]: " pubkey_path_input
-        PUBKEY_PATH="${PUBKEY_PATH:-$pubkey_path_input}"
+    PUBKEY_PATH="$HOME/.udocoin/pub_key.pub"
+    read -p "Please insert the path to your public-key or skip for default [$PUBKEY_PATH]: " pubkey_path_input
+    PUBKEY_PATH="${PUBKEY_PATH:-$pubkey_path_input}"
 
-        if [ ! -f "$PUBKEY_PATH" ]; then
-            echo "File not found: $PUBKEY_PATH"
-            set_pubkey_variable
-        fi
+    if [ ! -f "$PUBKEY_PATH" ]; then
+        echo "File not found: $PUBKEY_PATH"
+        set_pubkey_variable
+    fi
 
-        PUBKEY_CONTENT=$(cat "$PUBKEY_PATH")
-        export PUBKEY="$PUBKEY_CONTENT"
-        return $PUBKEY_CONTENT
-    } catch {
-        echo "Error: $_"
-    }
+    PUBKEY_CONTENT=$(cat "$PUBKEY_PATH")
+    export PUBKEY="$PUBKEY_CONTENT"
+    return $PUBKEY_CONTENT
 }
 
 function set_seed_server_variable {
