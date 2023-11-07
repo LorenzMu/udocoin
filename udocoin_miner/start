@@ -32,7 +32,7 @@ function prompt_for_keys {
 function set_privkey_variable {
     PRIVKEY_PATH="$HOME/.udocoin/priv_key"
     read -p "Please insert the path to your private-key or skip for default [$PRIVKEY_PATH]: " privkey_path_input
-    PRIVKEY_PATH="${PRIVKEY_PATH:-$privkey_path_input}"
+    PRIVKEY_PATH="${privkey_path_input:-$PRIVKEY_PATH}"
 
     if [ ! -f "$PRIVKEY_PATH" ]; then
         echo "File not found: $PRIVKEY_PATH"
@@ -47,7 +47,7 @@ function set_privkey_variable {
 function set_pubkey_variable {
     PUBKEY_PATH="$HOME/.udocoin/pub_key.pub"
     read -p "Please insert the path to your public-key or skip for default [$PUBKEY_PATH]: " pubkey_path_input
-    PUBKEY_PATH="${PUBKEY_PATH:-$pubkey_path_input}"
+    PUBKEY_PATH="${pubkey_path_input:-$PUBKEY_PATH}"
 
     if [ ! -f "$PUBKEY_PATH" ]; then
         echo "File not found: $PUBKEY_PATH"
@@ -71,23 +71,18 @@ function set_seed_server_variable {
     return $seed_server
 }
 
-try {
-    prompt_for_keys
+prompt_for_keys
 
-    # Get user inputs and set env variables
-    PRIVKEY_CONTENT=$(set_privkey_variable)
-    PUBKEY_CONTENT=$(set_pubkey_variable)
-    SEED_SERVER=$(set_seed_server_variable)
+# Get user inputs and set env variables
+PRIVKEY_CONTENT=$(set_privkey_variable)
+PUBKEY_CONTENT=$(set_pubkey_variable)
+SEED_SERVER=$(set_seed_server_variable)
 
-    export PRIVKEY="$PRIVKEY_CONTENT"
-    export PUBKEY="$PUBKEY_CONTENT"
-    export SEED_SERVER="$SEED_SERVER"
+export PRIVKEY="$PRIVKEY_CONTENT"
+export PUBKEY="$PUBKEY_CONTENT"
+export SEED_SERVER="$SEED_SERVER"
 
-    # python test.py
+# python test.py
 
-    # Build docker containers
-    docker-compose up --build
-}
-catch {
-    echo "Error: $_"
-}
+# Build docker containers
+docker-compose up --build
