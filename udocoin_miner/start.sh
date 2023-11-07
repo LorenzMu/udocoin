@@ -93,4 +93,4 @@ export SEED_SERVER="$SEED_SERVER"
 # echo "$SEED_SERVER"
 
 # Build docker containers
-docker-compose up --build
+docker compose up --build
