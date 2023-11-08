@@ -47,7 +47,7 @@ def verify_transaction(signed_transaction: SignedTransaction) -> TransactionData
         pub_key_obj = load_pem_public_key(bytes(formate_key(signed_transaction.origin_public_key), 'utf-8'), default_backend())
     except:
         # this works local
-        pub_key_obj = load_pem_public_key(bytes(signed_transaction.origin_public_key, 'utf-8'), default_backend())
+        pub_key_obj = load_pem_public_key(bytes(signed_transaction.origin_public_key.strip(), 'utf-8'), default_backend())
 
     try:
         pub_key_obj.verify(
@@ -80,13 +80,13 @@ def get_priv_key():
 
 def get_pub_key():
     key_str = os.environ["PUBKEY"]
-    key_bytes = bytes(key_str, 'utf-8')
+    key_bytes = bytes(key_str.strip(), 'utf-8')
     try:
         return load_pem_public_key(key_bytes,default_backend)
     except:
         key_str = formate_key(key_str)
         key_bytes = bytes(key_str, 'utf-8')
-        return load_pem_public_key(key_bytes,default_backend)
+        return load_pem_public_key(key_bytes.strip(),default_backend)
 
 def get_pub_key_string() -> str:
     return os.environ["PUBKEY"]
@@ -107,7 +107,7 @@ def formate_key(key:str)->str:
         if key_data:
             formatted_key = key_data.group(1).strip().replace(" ", "\n")
             final_key = f"-----BEGIN RSA PRIVATE KEY-----\n{formatted_key}\n-----END RSA PRIVATE KEY-----"
-            return final_key
+            return final_key + "\n"
         else:
             raise Exception("Invalid RSA key")
     elif "-----BEGIN PUBLIC KEY-----" in key:

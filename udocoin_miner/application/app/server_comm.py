@@ -9,6 +9,7 @@ import time
 
 from app.miner import MINER
 
+
 def update_known_seeds():
     received_known_seeds = []
     known_seeds = json.loads(os.environ["known_seeds"])
@@ -78,16 +79,25 @@ def connect_socket_to_seed(seed_ip:str,connection_type:str):
         return None
     
 def get_latest_blockchain():
-    known_seeds = json.loads(os.environ["known_seeds"])
+    known_seeds = ["http://18.195.41.104"] #json.loads(os.environ["known_seeds"])
     blockchains = []
     for known_seed in known_seeds:
         response = requests.get(f"{known_seed}/miner/blockchain")
+        if response.status_code != 200:
+            continue
         blockchain_text = response.text
+        print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+        print(blockchain_text)
+        print("++++++++++++++++++++++++++++++++++++")
+        print(MINER.blockchain_instance.export_blockchain())
+        print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
         blockchain = MINER.blockchain_instance.import_blockchain(blockchain_text)
         blockchains.append(blockchain)
     blockchain.append(MINER.blockchain_instance.blockchain)
     consensus_blockchain = MINER.blockchain_instance.get_consensus_blockchain(blockchains)
     MINER.blockchain_instance = consensus_blockchain
+
+get_latest_blockchain()
 
 @app.route("/register",methods=["POST"])
 def register_seed_server():
