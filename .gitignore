@@ -150,4 +150,4 @@ priv_key
 
 # tests
 /test
-
+test.*
