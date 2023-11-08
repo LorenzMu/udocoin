@@ -130,7 +130,7 @@ class Blockchain:
 
 
     
-    def import_blockchain(self, blockchain):
+    def import_blockchain(self, blockchain:str)->list:
         loaded_blockchain = json.loads(blockchain)
         imported_blockchain = []
 
@@ -151,6 +151,7 @@ class Blockchain:
         if self.validate_blockchain(imported_blockchain):
             print("import succesful!")
             return loaded_blockchain
+        return None
 
     #Here is where we will pass a list of blockchains from our P2P network to find a consensus blockchain
     def get_consensus_blockchain(self, list_of_blockchains: list[list[Block]]) -> list[Block] | None:

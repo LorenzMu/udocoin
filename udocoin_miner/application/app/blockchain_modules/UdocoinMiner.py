@@ -3,6 +3,7 @@ from app.blockchain_modules.udocoin_dataclasses import *
 from app.blockchain_modules.transactions import *
 import os
 import threading
+from app import server_comm as server_comm
 
 #Separate class, because different people may want to implement it differently
 #The blockchain as the central data structure is the consistent class and may not have different implementations
@@ -12,6 +13,7 @@ class UdocoinMiner:
         self.mempool= BlockData([])
         self.proof_to_start_with = proof_to_start_with
         self.mining = True
+        self.new_proof = proof_to_start_with
 
     def stop_mining(self):
         print("Stopping mining...")
@@ -30,6 +32,14 @@ class UdocoinMiner:
                 self.mining = False
             print("Found new Block!!!")
             # TODO handle new_block
+            exported_blockchain = self.blockchain_instance.export_blockchain()
+            # broadcast blockchain instance
+            server_comm.broadcast_new_blockchain(exported_blockchain)
+
+    def restart_mining(self):
+        self.stop_mining()
+        self.new_proof = self.proof_to_start_with
+        self.continue_mining()
 
     def is_mining(self):
         return self.mining
@@ -59,26 +69,26 @@ class UdocoinMiner:
                         block_value=self.blockchain_instance.get_block_value(new_index))
 
         self.blockchain_instance.update_blockchain(block = new_block)
+        self.new_proof = self.proof_to_start_with
         return new_block
 
     def generate_proof_of_work(self, previous_PoW: int, index: int, data: str) -> int:
-        new_proof = self.proof_to_start_with
         check_proof = False
 
         while not check_proof:
             if not self.mining: # cancel mining if stopped
                 return None
-            data_to_hash = self.blockchain_instance.generate_pre_hash(new_proof, previous_PoW, index, data)
+            data_to_hash = self.blockchain_instance.generate_pre_hash(self.new_proof, previous_PoW, index, data)
             hash_operation = hashlib.sha256(data_to_hash).hexdigest()
             #If last four digits of the hash are "0", the proof is accepted
             if hash_operation[:5]== "00000":
                 check_proof = True
             else:
-                new_proof += 1
+                self.new_proof += 1
         
         # print(new_proof)
 
-        return new_proof
+        return self.new_proof
 
     #Implement this using the network! Verify Transactions!
     def update_mempool(self):

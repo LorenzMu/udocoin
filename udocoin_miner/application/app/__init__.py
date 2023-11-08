@@ -71,10 +71,5 @@ server_comm.update_known_seeds()
 server_comm.setup_socket_connections()
 
 
-from app.blockchain_modules.UdocoinMiner import UdocoinMiner
-
-MINER = UdocoinMiner(1)
-MINER_THREAD = MINER.continuous_mining()
-MINER.stop_mining()
 
 from app import endpoints
