@@ -117,12 +117,12 @@ class Blockchain:
             for block in exported_blockchain:
                 for signed_transaction in block.data.transaction_list:
                     if signed_transaction is not None:
-                        signed_transaction.origin_public_key = signed_transaction.origin_public_key.decode("utf-8")
+                        signed_transaction.origin_public_key = signed_transaction.origin_public_key
                         #signed_transaction.signature = signed_transaction.signature.decode("utf-8")
                         signed_transaction.signature = b64encode(signed_transaction.signature).decode('utf-8')
                         signed_transaction.message = signed_transaction.message.decode("utf-8")
                 if block.block_author_public_key is not None:
-                    block.block_author_public_key = block.block_author_public_key.decode("utf-8")
+                    block.block_author_public_key = block.block_author_public_key
     
             return json.dumps(exported_blockchain, cls=EnhancedJSONEncoder)
         else:
