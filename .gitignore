@@ -150,4 +150,7 @@ priv_key
 
 # tests
 /test
+
+/**/venv
+
 test.*
