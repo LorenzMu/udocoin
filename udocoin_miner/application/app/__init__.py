@@ -57,7 +57,6 @@ update known seed server ips
 '''
 from app import server_comm as server_comm
 
-print("=========== LOADING SEEDS FROM ENV/FILE ============")
 if "known_seeds" not in os.environ.keys() or len(json.loads(os.environ["known_seeds"])) == 0:
     print("Found no seeds in env-variables")
     o = json.load(open(os.path.join(pathlib.Path(__file__).parent.parent,"seeds.json")))
