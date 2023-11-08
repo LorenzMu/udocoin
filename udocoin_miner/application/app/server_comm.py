@@ -82,7 +82,7 @@ def get_latest_blockchain():
     blockchains = []
     for known_seed in known_seeds:
         response = requests.get(f"{known_seed}/miner/blockchain")
-        blockchain_text = response.j
+        blockchain_text = response.text
         blockchain = MINER.blockchain_instance.import_blockchain(blockchain_text)
         blockchains.append(blockchain)
     blockchain.append(MINER.blockchain_instance.blockchain)
