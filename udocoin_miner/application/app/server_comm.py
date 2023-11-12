@@ -85,7 +85,7 @@ def get_latest_blockchain():
         blockchain_text = response.text
         blockchain = MINER.blockchain_instance.import_blockchain(blockchain_text)
         blockchains.append(blockchain)
-    blockchain.append(MINER.blockchain_instance.blockchain)
+    blockchains.append(MINER.blockchain_instance.blockchain)
     consensus_blockchain = MINER.blockchain_instance.get_consensus_blockchain(blockchains)
     MINER.blockchain_instance = consensus_blockchain
     # with open("blockchain_test_export","r") as file:
