@@ -95,6 +95,6 @@ server_comm.update_known_seeds()
 
 server_comm.setup_socket_connections()
 
-
+server_comm.get_latest_blockchain()
 
 from app import endpoints

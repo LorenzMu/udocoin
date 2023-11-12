@@ -97,7 +97,7 @@ class UdocoinMiner:
 def static_data():
     pub_key_str = get_pub_key_string()
     my_transaction_data = TransactionData(pub_key_str, "my_destination_adress", timestamp=datetime.now(), amount=50)
-    signed_trans = sign_transaction(get_priv_key(), pub_key_str, my_transaction_data)
+    signed_trans = sign_transaction(get_priv_key(), bytes(pub_key_str,"utf-8"), my_transaction_data)
     verify_transaction(signed_trans)
 
     return BlockData([signed_trans])

@@ -154,3 +154,5 @@ priv_key
 /**/venv
 
 test.*
+
+blockchain_test*

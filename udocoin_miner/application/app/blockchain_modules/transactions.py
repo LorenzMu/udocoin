@@ -43,7 +43,7 @@ def verify_transaction(signed_transaction: SignedTransaction) -> TransactionData
     # print("len: " + str(len(formate_key(signed_transaction.origin_public_key))))
     # print("=================================")
     
-    pub_key_obj = load_pem_public_key(bytes(signed_transaction.origin_public_key, 'utf-8'), default_backend())
+    pub_key_obj = load_pem_public_key(signed_transaction.origin_public_key, default_backend())
 
     try:
         pub_key_obj.verify(

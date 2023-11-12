@@ -40,12 +40,20 @@ class Blockchain:
         return hashlib.sha256(str(block).encode()).hexdigest()
 
     def validate_blockchain(self, blockchain: list[Block]) -> bool:
+        print('************ Validating Blockchain ****************\n')
         previous_block = blockchain[0]
         block_index = 1
 
         while block_index < len(blockchain):
+            print("index: ",block_index)
             block = blockchain[block_index]
             # Check if the previous hash of the current block is the same as the hash of its previous block
+            print("Previous Block: " + str(previous_block))
+            print("This block:" + str(block))
+            print("Previous Hash: " + str(self.hash(previous_block)))
+            print("Previous Hash: " + str(block.prev_hash))
+            a = block.prev_hash
+            b = self.hash(previous_block)
             if block.prev_hash != self.hash(previous_block) and previous_block != blockchain[0]:
                 raise Exception("Wrong previous hash detected, block rejected!")
                 return False
@@ -95,9 +103,10 @@ class Blockchain:
             #Subtract and add balances for each transaction in each block
             for signed_transaction in block.data.transaction_list:
                 message = TransactionData(**json.loads(signed_transaction.message))
-                if signed_transaction.origin_public_key in new_balances.keys():
-                    if new_balances[signed_transaction.origin_public_key] >= message.amount:
-                        new_balances[signed_transaction.origin_public_key] -= message.amount
+                origin_public_key = signed_transaction.origin_public_key.decode('utf-8')
+                if origin_public_key in new_balances.keys():
+                    if new_balances[origin_public_key] >= message.amount:
+                        new_balances[origin_public_key] -= message.amount
                         if message.destination_public_key in new_balances.keys():
                             new_balances[message.destination_public_key] += message.amount
                         else:
@@ -117,13 +126,15 @@ class Blockchain:
             for block in exported_blockchain:
                 for signed_transaction in block.data.transaction_list:
                     if signed_transaction is not None:
-                        signed_transaction.origin_public_key = signed_transaction.origin_public_key
+                        signed_transaction.origin_public_key = signed_transaction.origin_public_key.decode("utf-8")
                         #signed_transaction.signature = signed_transaction.signature.decode("utf-8")
                         signed_transaction.signature = b64encode(signed_transaction.signature).decode('utf-8')
                         signed_transaction.message = signed_transaction.message.decode("utf-8")
                 if block.block_author_public_key is not None:
-                    block.block_author_public_key = block.block_author_public_key
+                    block.block_author_public_key = block.block_author_public_key#.decode("utf-8")
     
+            # with open("blockchain_test_export","w") as file:
+            #     file.write(json.dumps(exported_blockchain, cls=EnhancedJSONEncoder))
             return json.dumps(exported_blockchain, cls=EnhancedJSONEncoder)
         else:
             raise Exception("Export failed due to invalid blockchain!")
@@ -145,13 +156,15 @@ class Blockchain:
                         signed_transaction.signature = b64decode(signed_transaction.signature)#.encode('utf-8')
                         signed_transaction.message = signed_transaction.message.encode('utf-8')
                 if block.block_author_public_key is not None:
-                    block.block_author_public_key = block.block_author_public_key.encode('utf-8')
+                    block.block_author_public_key = block.block_author_public_key
         
+        # with open("blockchain_test_import","w") as file:
+        #     file.write(str(imported_blockchain))
 
         if self.validate_blockchain(imported_blockchain):
             print("import succesful!")
             return loaded_blockchain
-        return None
+
 
     #Here is where we will pass a list of blockchains from our P2P network to find a consensus blockchain
     def get_consensus_blockchain(self, list_of_blockchains: list[list[Block]]) -> list[Block] | None:
@@ -181,16 +194,6 @@ class Blockchain:
         else:
             return None
 
-        # if False:
-        #     self.blockchain = consensus_blockchain
-        #     return True
-        
-        # #If no consensus blockchain is found, create your own in __init__
-        # else:
-        #     return None
-        
-
-        
 class EnhancedJSONEncoder(json.JSONEncoder):
         def default(self, o):
             if dataclasses.is_dataclass(o):
