@@ -87,10 +87,9 @@ def get_latest_blockchain():
         blockchains.append(blockchain)
     blockchains.append(MINER.blockchain_instance.blockchain)
     consensus_blockchain = MINER.blockchain_instance.get_consensus_blockchain(blockchains)
-    MINER.blockchain_instance.blockchain = consensus_blockchain
-    # with open("blockchain_test_export","r") as file:
-    #     blockchain = MINER.blockchain_instance.import_blockchain(file.read())
-    #     print("OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
+    if consensus_blockchain != MINER.blockchain_instance.blockchain:
+        MINER.blockchain_instance.blockchain = consensus_blockchain
+        MINER.restart_mining()
 
 @app.route("/register",methods=["POST"])
 def register_seed_server():

@@ -1,7 +1,7 @@
 from app.blockchain_modules.blockchain import Blockchain
 from app.blockchain_modules.udocoin_dataclasses import *
 from app.blockchain_modules.transactions import *
-import os
+import os,time
 import threading
 from app import server_comm as server_comm
 
@@ -39,6 +39,7 @@ class UdocoinMiner:
     def restart_mining(self):
         self.stop_mining()
         self.new_proof = self.proof_to_start_with
+        time.sleep(0.1)
         self.continue_mining()
 
     def is_mining(self):

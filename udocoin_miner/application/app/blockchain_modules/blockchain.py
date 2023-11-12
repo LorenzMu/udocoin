@@ -163,7 +163,7 @@ class Blockchain:
 
         if self.validate_blockchain(imported_blockchain):
             print("import succesful!")
-            return loaded_blockchain
+            return imported_blockchain
 
 
     #Here is where we will pass a list of blockchains from our P2P network to find a consensus blockchain
