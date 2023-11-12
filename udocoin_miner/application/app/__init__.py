@@ -39,10 +39,35 @@ else: # If started locally -> get user input and set variables
     SEED_SERVER = input("Is the server a Seed-Server? [y/n] ")
     PRIVKEY = getPrivkey()
     PUBKEY = getPubkey()
+
+import re
+def formate_key(key:str)->str:
+    if "-----BEGIN RSA PRIVATE KEY-----" in key:
+        pattern = r"-----BEGIN RSA PRIVATE KEY-----(.*?)-----END RSA PRIVATE KEY-----"
+        key_data = re.search(pattern, key, re.DOTALL)
+        
+        if key_data:
+            formatted_key = key_data.group(1).strip().replace(" ", "\n")
+            final_key = f"-----BEGIN RSA PRIVATE KEY-----\n{formatted_key}\n-----END RSA PRIVATE KEY-----"
+            return final_key
+        else:
+            raise Exception("Invalid RSA key")
+    elif "-----BEGIN PUBLIC KEY-----" in key:
+        pattern = r"-----BEGIN PUBLIC KEY-----(.*?)-----END PUBLIC KEY-----"
+        key_data = re.search(pattern, key, re.DOTALL)
+        
+        if key_data:
+            formatted_key = key_data.group(1).strip().replace(" ", "\n")
+            final_key = f"-----BEGIN PUBLIC KEY-----\n{formatted_key}\n-----END PUBLIC KEY-----"
+            return final_key + "\n"
+        else:
+            raise Exception("Invalid PUBLIC key")
+    else:
+        raise Exception("Invalid key")
     
 os.environ["IS_SEED_SERVER"] = "True" if SEED_SERVER == "y" or SEED_SERVER == "yes" else ""
-os.environ["PUBKEY"] = PUBKEY
-os.environ["PRIVKEY"] = PRIVKEY
+os.environ["PUBKEY"] = formate_key(PUBKEY)
+os.environ["PRIVKEY"] = formate_key(PRIVKEY)
 # TODO verify pubkey else create new key and notify user
 
 app = Flask(__name__)
@@ -70,10 +95,6 @@ server_comm.update_known_seeds()
 
 server_comm.setup_socket_connections()
 
-
-from app.blockchain_modules.UdocoinMiner import UdocoinMiner
-
-MINER = UdocoinMiner(1)
-MINER_THREAD = MINER.continuous_mining()
+server_comm.get_latest_blockchain()
 
 from app import endpoints

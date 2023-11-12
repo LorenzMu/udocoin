@@ -150,4 +150,9 @@ priv_key
 
 # tests
 /test
+
+/**/venv
+
 test.*
+
+blockchain_test*

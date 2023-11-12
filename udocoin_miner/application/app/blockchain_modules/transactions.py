@@ -42,12 +42,8 @@ def verify_transaction(signed_transaction: SignedTransaction) -> TransactionData
     # print("type: " + str(type(formate_key(signed_transaction.origin_public_key))))
     # print("len: " + str(len(formate_key(signed_transaction.origin_public_key))))
     # print("=================================")
-    try:
-        # this works in docker
-        pub_key_obj = load_pem_public_key(bytes(formate_key(signed_transaction.origin_public_key), 'utf-8'), default_backend())
-    except:
-        # this works local
-        pub_key_obj = load_pem_public_key(bytes(signed_transaction.origin_public_key, 'utf-8'), default_backend())
+    
+    pub_key_obj = load_pem_public_key(signed_transaction.origin_public_key, default_backend())
 
     try:
         pub_key_obj.verify(
@@ -71,22 +67,12 @@ def verify_transaction(signed_transaction: SignedTransaction) -> TransactionData
 def get_priv_key():
     key_str = os.environ["PRIVKEY"]
     key_bytes = bytes(key_str, 'utf-8')
-    try:
-        return load_pem_private_key(key_bytes,None,default_backend)
-    except:
-        key_str = formate_key(key_str)
-        key_bytes = bytes(key_str, 'utf-8')
-        return load_pem_private_key(key_bytes,None,default_backend)
+    return load_pem_private_key(key_bytes,None,default_backend)
 
 def get_pub_key():
     key_str = os.environ["PUBKEY"]
     key_bytes = bytes(key_str, 'utf-8')
-    try:
-        return load_pem_public_key(key_bytes,default_backend)
-    except:
-        key_str = formate_key(key_str)
-        key_bytes = bytes(key_str, 'utf-8')
-        return load_pem_public_key(key_bytes,default_backend)
+    return load_pem_public_key(key_bytes,default_backend)
 
 def get_pub_key_string() -> str:
     return os.environ["PUBKEY"]
@@ -98,30 +84,7 @@ def get_priv_key_from_path(path:str):
 def get_pub_key_from_path(path: str):
     with open(path, "r") as f:
         return f.read()
-    
-def formate_key(key:str)->str:
-    if "-----BEGIN RSA PRIVATE KEY-----" in key:
-        pattern = r"-----BEGIN RSA PRIVATE KEY-----(.*?)-----END RSA PRIVATE KEY-----"
-        key_data = re.search(pattern, key, re.DOTALL)
-        
-        if key_data:
-            formatted_key = key_data.group(1).strip().replace(" ", "\n")
-            final_key = f"-----BEGIN RSA PRIVATE KEY-----\n{formatted_key}\n-----END RSA PRIVATE KEY-----"
-            return final_key
-        else:
-            raise Exception("Invalid RSA key")
-    elif "-----BEGIN PUBLIC KEY-----" in key:
-        pattern = r"-----BEGIN PUBLIC KEY-----(.*?)-----END PUBLIC KEY-----"
-        key_data = re.search(pattern, key, re.DOTALL)
-        
-        if key_data:
-            formatted_key = key_data.group(1).strip().replace(" ", "\n")
-            final_key = f"-----BEGIN PUBLIC KEY-----\n{formatted_key}\n-----END PUBLIC KEY-----"
-            return final_key + "\n"
-        else:
-            raise Exception("Invalid PUBLIC key")
-    else:
-        raise Exception("Invalid key")
+
 
 # my_transaction_data = TransactionData(get_pub_key_string("pub_key.txt"), "schmarn", timestamp=datetime.now(), amount=50)
 

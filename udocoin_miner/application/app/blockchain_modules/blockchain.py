@@ -13,10 +13,11 @@ class Blockchain:
         self.blockchain: list[Block] = []
         self.balances: dict[str, float] = {}
 
-        if self.find_consensus_blockchain() == None:
+        if self.get_consensus_blockchain(self.blockchain) == None:
             genesis_block = Block(data = BlockData(transaction_list=[]),
                                   proof_of_work= 1, prev_hash= "0", index = 0)
             self.update_blockchain(genesis_block)
+            
 
     def update_blockchain(self, block: Block):
         self.blockchain.append(block)
@@ -39,12 +40,20 @@ class Blockchain:
         return hashlib.sha256(str(block).encode()).hexdigest()
 
     def validate_blockchain(self, blockchain: list[Block]) -> bool:
+        print('************ Validating Blockchain ****************\n')
         previous_block = blockchain[0]
         block_index = 1
 
         while block_index < len(blockchain):
+            print("index: ",block_index)
             block = blockchain[block_index]
             # Check if the previous hash of the current block is the same as the hash of its previous block
+            print("Previous Block: " + str(previous_block))
+            print("This block:" + str(block))
+            print("Previous Hash: " + str(self.hash(previous_block)))
+            print("Previous Hash: " + str(block.prev_hash))
+            a = block.prev_hash
+            b = self.hash(previous_block)
             if block.prev_hash != self.hash(previous_block) and previous_block != blockchain[0]:
                 raise Exception("Wrong previous hash detected, block rejected!")
                 return False
@@ -81,21 +90,6 @@ class Blockchain:
     def get_block_value(self, index):
         return 1024 / (2**(index//100))
     
-    #Here is where we will access our decentralized P2P network to find our consensus blockchain
-    #Maybe refactor into different class
-    def find_consensus_blockchain(self) -> bool | None:
-
-        found_blockchains = ["juhu","jippie"]
-        consensus_blockchain = "juhu"
-
-        if False:
-            self.blockchain = consensus_blockchain
-            return True
-        
-        #If no consensus blockchain is found, create your own in __init__
-        else:
-            return None
-    
     def update_balances(self, index_start):
         new_balances = self.balances
         for block in self.blockchain[index_start:]:
@@ -109,9 +103,10 @@ class Blockchain:
             #Subtract and add balances for each transaction in each block
             for signed_transaction in block.data.transaction_list:
                 message = TransactionData(**json.loads(signed_transaction.message))
-                if signed_transaction.origin_public_key in new_balances.keys():
-                    if new_balances[signed_transaction.origin_public_key] >= message.amount:
-                        new_balances[signed_transaction.origin_public_key] -= message.amount
+                origin_public_key = signed_transaction.origin_public_key.decode('utf-8')
+                if origin_public_key in new_balances.keys():
+                    if new_balances[origin_public_key] >= message.amount:
+                        new_balances[origin_public_key] -= message.amount
                         if message.destination_public_key in new_balances.keys():
                             new_balances[message.destination_public_key] += message.amount
                         else:
@@ -131,20 +126,22 @@ class Blockchain:
             for block in exported_blockchain:
                 for signed_transaction in block.data.transaction_list:
                     if signed_transaction is not None:
-                        signed_transaction.origin_public_key = signed_transaction.origin_public_key
+                        signed_transaction.origin_public_key = signed_transaction.origin_public_key.decode("utf-8")
                         #signed_transaction.signature = signed_transaction.signature.decode("utf-8")
                         signed_transaction.signature = b64encode(signed_transaction.signature).decode('utf-8')
                         signed_transaction.message = signed_transaction.message.decode("utf-8")
                 if block.block_author_public_key is not None:
-                    block.block_author_public_key = block.block_author_public_key
+                    block.block_author_public_key = block.block_author_public_key#.decode("utf-8")
     
+            # with open("blockchain_test_export","w") as file:
+            #     file.write(json.dumps(exported_blockchain, cls=EnhancedJSONEncoder))
             return json.dumps(exported_blockchain, cls=EnhancedJSONEncoder)
         else:
             raise Exception("Export failed due to invalid blockchain!")
 
 
     
-    def import_blockchain(self, blockchain):
+    def import_blockchain(self, blockchain:str)->list:
         loaded_blockchain = json.loads(blockchain)
         imported_blockchain = []
 
@@ -159,14 +156,44 @@ class Blockchain:
                         signed_transaction.signature = b64decode(signed_transaction.signature)#.encode('utf-8')
                         signed_transaction.message = signed_transaction.message.encode('utf-8')
                 if block.block_author_public_key is not None:
-                    block.block_author_public_key = block.block_author_public_key.encode('utf-8')
+                    block.block_author_public_key = block.block_author_public_key
         
+        # with open("blockchain_test_import","w") as file:
+        #     file.write(str(imported_blockchain))
 
         if self.validate_blockchain(imported_blockchain):
             print("import succesful!")
-            return loaded_blockchain
-        
-        
+            return imported_blockchain
+
+
+    #Here is where we will pass a list of blockchains from our P2P network to find a consensus blockchain
+    def get_consensus_blockchain(self, list_of_blockchains: list[list[Block]]) -> list[Block] | None:
+
+        #First delete any blockchains that can not be validated
+        validated_blockchains = [blch for blch in list_of_blockchains if self.validate_blockchain(blch)]
+
+        if len(validated_blockchains) >= 1:
+            #Next get the longest blockchains
+            longest_blockchains = [blch for blch in validated_blockchains if (len(blch) == max([len(x) for x in validated_blockchains]))]
+
+            #If there is only one longest blockchain, it is the consensus blockchain
+            if len(longest_blockchains) == 1:
+                return longest_blockchains[0]
+
+            #If there are multiple blockchains of equal length, choose the one with the highest proof of work
+            else:
+                highest_pow_blockchains = [blch for blch in longest_blockchains if (blch[-1].proof_of_work == max([x[-1].proof_of_work for x in longest_blockchains]))]
+
+                #If only one blockchain has the highest proof of work, it is the consensus blockchain
+                #If there are multiple blockchains of equal length and equal highest proof of work, the network will eventually settle
+                #on a canonical blockchain, because eventually a block will be mined without a different miner finding it simultaneously.
+                #When this happens, the block will propagate throughout the network and the shorter blockchain fork will be eliminated.
+                return highest_pow_blockchains[0]
+
+        #If no consensus blockchain is found, create your own in __init__
+        else:
+            return None
+
 class EnhancedJSONEncoder(json.JSONEncoder):
         def default(self, o):
             if dataclasses.is_dataclass(o):
