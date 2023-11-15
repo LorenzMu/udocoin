@@ -1,4 +1,4 @@
-package com.ericdecanini.chaquopytesttwo
+package com.udocoin.udocoin_wallet
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

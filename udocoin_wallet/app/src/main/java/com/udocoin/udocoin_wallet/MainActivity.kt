@@ -1,9 +1,8 @@
-package com.ericdecanini.chaquopytesttwo
+package com.udocoin.udocoin_wallet
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.chaquo.python.Python
-import com.chaquo.python.android.AndroidPlatform
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {

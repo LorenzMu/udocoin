@@ -1,4 +1,4 @@
-package com.ericdecanini.chaquopytesttwo
+package com.udocoin.udocoin_wallet
 
 import android.app.Application
 import com.chaquo.python.Python

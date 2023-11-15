@@ -1,4 +1,4 @@
-package com.ericdecanini.chaquopytesttwo
+package com.udocoin.udocoin_wallet
 
 import org.junit.Test
 
