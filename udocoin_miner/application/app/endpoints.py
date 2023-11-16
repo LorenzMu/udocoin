@@ -67,3 +67,11 @@ def post_transaction():
 
     return_message = MINER.receive_transaction_request(signed_trans)
     return return_message
+
+@app.route("/miner/get_balance/<public_key>")
+def get_balance(public_key):
+    return MINER.blockchain_instance.balances[public_key]
+
+@app.route("/miner/mempool")
+def get_balance():
+    return MINER.mempool
