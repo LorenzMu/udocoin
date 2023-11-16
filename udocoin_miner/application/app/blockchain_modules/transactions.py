@@ -62,7 +62,7 @@ def verify_transaction(signed_transaction: SignedTransaction) -> TransactionData
         return TransactionData(**loads(signed_transaction.message))
         
     except InvalidSignature:
-        return "Message signature could not be verified!"
+        return None  #"Message signature could not be verified!"
 
 def get_priv_key():
     key_str = os.environ["PRIVKEY"]

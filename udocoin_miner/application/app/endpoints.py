@@ -59,3 +59,11 @@ def miner_continue():
 def cons_test():
     consensus_test()
     return "Ran consesnsus test, check console for more information"
+
+@app.route("/miner/post_transaction",methods=["POST"])
+def post_transaction():
+    post_request = request.get_json()
+    signed_trans = dacite.from_dict(data_class=SignedTransaction, data={k: v for k, v in post_request.items() if v is not None})
+
+    return_message = MINER.receive_transaction_request(signed_trans)
+    return return_message

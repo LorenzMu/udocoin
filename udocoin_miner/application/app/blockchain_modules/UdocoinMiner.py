@@ -4,16 +4,17 @@ from app.blockchain_modules.transactions import *
 import os,time
 import threading
 from app import server_comm as server_comm
+from typing import List
 
 #Separate class, because different people may want to implement it differently
 #The blockchain as the central data structure is the consistent class and may not have different implementations
 class UdocoinMiner:
     def __init__(self, proof_to_start_with: int):
-        self.blockchain_instance = Blockchain()
-        self.mempool= BlockData([])
-        self.proof_to_start_with = proof_to_start_with
-        self.mining = True
-        self.new_proof = proof_to_start_with
+        self.blockchain_instance: Blockchain = Blockchain()
+        self.mempool: list[SignedTransaction] = []
+        self.proof_to_start_with: int = proof_to_start_with
+        self.mining: bool = True
+        self.new_proof: int = proof_to_start_with
 
     def stop_mining(self):
         print("Stopping mining...")
@@ -61,15 +62,15 @@ class UdocoinMiner:
             return None
         prev_hash = self.blockchain_instance.hash(previous_block)
 
-        #when a mempool exists in the future, update it
-        data = self.update_mempool()
+        data = self.get_valid_transactions()
         #for now use static data
-        data = static_data()
+        #data = static_data()
         new_block = Block(data=data, proof_of_work=new_PoW, prev_hash=prev_hash, index=new_index, 
                         block_author_public_key=get_pub_key_string(),
                         block_value=self.blockchain_instance.get_block_value(new_index))
 
         self.blockchain_instance.update_blockchain(block = new_block)
+        self.update_mempool()
         self.new_proof = self.proof_to_start_with
         return new_block
 
@@ -91,9 +92,68 @@ class UdocoinMiner:
 
         return self.new_proof
 
-    #Implement this using the network! Verify Transactions!
-    def update_mempool(self):
-        return None
+    #verifies the transaction's signature and naively check that the user's account balance is high enough to complete it
+    def validate_transaction(signed_transaction: SignedTransaction, balances: List[AccountBalance]) -> bool:
+        transaction_data = verify_transaction(signed_transaction)
+        if transaction_data != None:
+            if balances[signed_transaction.origin_public_key] >= transaction_data.amount:
+                return True
+                
+        return False
+
+    #Occurs when a new transaction is broadcast to the peer
+    def receive_transaction_request(self, signed_transaction: SignedTransaction) -> str:
+        if self.validate_transaction(signed_transaction, balances= self.blockchain_instance.balances): 
+            if signed_transaction not in self.mempool:
+                self.mempool.append(SignedTransaction)
+                return "Received transaction and added it to mempool. Your transaction will be processed once 5 more blocks have been published"
+                #TODO: !&!&!&!&!&!&!&!&!& Broadcast transactions to other peers here if os.environ["IS_SEED_SERVER"] == "True" !&!&!&!&!&!&!&!&!&!&!&!&!
+            else:
+                return "Transaction request already received."
+        else:
+            return "Your signature is wrong or your account balance is too low!"
+
+
+
+    #Deletes Signed Transactions from the mempool if the transaction has been confirmed in a deep block or the transaction is too old.
+    #depth_to_purge is the n-th to last Block in the blockchain
+    #max_age is the maximum age transaction may have in the mempool in days
+    def update_mempool(self, depth_to_purge = 5, max_age_days = 1, max_age_hours = 0 ) -> None:
+        cut_off_time = datetime.datetime.now() - datetime.timedelta(days = max_age_days, hours=max_age_hours)
+
+        #Get transaction_list from block from which to filter
+        transaction_list =  self.blockchain_instance.blockchain[-depth_to_purge].data.transaction_list
+        
+        #Delete all already integrated blocks from the mempool
+        transactions_without_blocks = [s_t for s_t in self.mempool if s_t not in transaction_list]
+        
+        #Delete all transactions that are too old
+        self.mempool = [s_t for s_t in transactions_without_blocks if verify_transaction(s_t).timestamp > cut_off_time]
+
+    #Collects transactions from the mempool that can be published in the next published block in one list    
+    def get_valid_transactions(self) -> list[SignedTransaction]:
+        publishable_transactions = []
+        temp_balances = self.blockchain_instance.balances
+
+        transaction_data_list = [verify_transaction(s_t) for s_t in self.mempool]
+        #remove unverifiable messages
+        transaction_data_list = [s_t for s_t in transaction_data_list if s_t != None]
+
+        #Check if account balance is high enough to make transaction
+        for transaction_data in transaction_data_list:
+            if transaction_data.origin_public_key in transaction_data.keys() and (transaction_data.amount >= temp_balances[transaction_data.origin_public_key]):
+                temp_balances[transaction_data.origin_public_key]-= transaction_data.amount
+                if temp_balances[transaction_data.destination_public_key] in transaction_data.keys():
+                    temp_balances[transaction_data.destination_public_key] += transaction_data.amount
+                else:
+                    temp_balances[transaction_data.destination_public_key] = transaction_data.amount
+                publishable_transactions.append(transaction_data)
+        
+        publishable_signed_transactions = [s_t for s_t in self.mempool if (TransactionData(**loads(signed_transaction.message)) in publishable_transactions)]
+        return publishable_signed_transactions
+        
+
+        
 
 def static_data():
     pub_key_str = get_pub_key_string()

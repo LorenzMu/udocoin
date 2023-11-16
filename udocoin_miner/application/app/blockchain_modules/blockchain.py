@@ -28,8 +28,9 @@ class Blockchain:
             if not self.validate_blockchain(self.blockchain):
                 self.blockchain.pop()
                 raise Exception("Blockchain not valid, block rejected!")
-            #if len(self.blockchain)%100 == 0:
-            self.update_balances(index_start = (len(self.blockchain)-1))
+            #If there are more than 5 blocks, the blockchain is long enough to start updating balances 
+            if len(self.blockchain) > 5:
+                self.update_balances(index_start = (len(self.blockchain)-5))
     
     #Do some arbitrary math to "work" the system
     def generate_pre_hash(self, new_proof: int, previous_proof: int, index: int, data: str) -> str:
@@ -89,34 +90,38 @@ class Blockchain:
     #Exponential block value decay
     def get_block_value(self, index):
         return 1024 / (2**(index//100))
-    
-    def update_balances(self, index_start):
-        new_balances = self.balances
-        for block in self.blockchain[index_start:]:
-            #Get Block values summed per public key
-            balance_from_mining = AccountBalance(block.block_author_public_key, block.block_value)
-            if block.block_author_public_key in new_balances.keys():
-                new_balances[block.block_author_public_key] += block.block_value
-            else:
-                new_balances[block.block_author_public_key] = block.block_value
 
-            #Subtract and add balances for each transaction in each block
-            for signed_transaction in block.data.transaction_list:
-                message = TransactionData(**json.loads(signed_transaction.message))
-                origin_public_key = signed_transaction.origin_public_key.decode('utf-8')
-                if origin_public_key in new_balances.keys():
-                    if new_balances[origin_public_key] >= message.amount:
-                        new_balances[origin_public_key] -= message.amount
-                        if message.destination_public_key in new_balances.keys():
-                            new_balances[message.destination_public_key] += message.amount
-                        else:
-                            new_balances[message.destination_public_key] = message.amount
+
+    #Account balance is valid once blocks are index_start blocks deep in the blockchain
+    def update_balances(self, index_start: int):
+        new_balances = self.balances
+
+        block = self.blockchain[index_start]
+        
+        #Get Block values summed per public key
+        balance_from_mining = AccountBalance(block.block_author_public_key, block.block_value)
+        if block.block_author_public_key in new_balances.keys():
+            new_balances[block.block_author_public_key] += block.block_value
+        else:
+            new_balances[block.block_author_public_key] = block.block_value
+
+        #Subtract and add balances for each transaction in each block
+        for signed_transaction in block.data.transaction_list:
+            message = TransactionData(**json.loads(signed_transaction.message))
+            origin_public_key = signed_transaction.origin_public_key.decode('utf-8')
+            if origin_public_key in new_balances.keys():
+                if new_balances[origin_public_key] >= message.amount:
+                    new_balances[origin_public_key] -= message.amount
+                    if message.destination_public_key in new_balances.keys():
+                        new_balances[message.destination_public_key] += message.amount
                     else:
-                        self.blockchain.pop()
-                        raise Exception("Account Balance of Origin Adress too low! Block rejected!")
+                        new_balances[message.destination_public_key] = message.amount
                 else:
                     self.blockchain.pop()
-                    raise Exception("Origin Address not found. Block rejected!")
+                    raise Exception("Account Balance of Origin Adress too low! Block rejected!")
+            else:
+                self.blockchain.pop()
+                raise Exception("Origin Address not found. Block rejected!")
 
         self.balances = new_balances
 
