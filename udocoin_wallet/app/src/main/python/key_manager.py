@@ -9,9 +9,10 @@ import os,sys
 
 directory_name = ".udocoin"
 private_key_file_name = "priv_key"
-public_key_file_name = "pub_key"
+public_key_file_name = "pub_key.pub"
 
 def get_directory()->str:
+    global directory_name
     if os.name == 'nt':  # Windows
         key_directory_path = os.path.join(os.path.expanduser("~"), directory_name)
     else:  # Unix-based Systeme (Linux, macOS)
@@ -26,22 +27,10 @@ def get_directory()->str:
             exit(1)
     return key_directory_path
 
-def get_filenames(key_directory_path,n=None):
-    if n is None:
-        private_key_path = os.path.join(key_directory_path,private_key_file_name)
-        public_key_path = os.path.join(key_directory_path,public_key_file_name + ".pub")
-        
-        if os.path.exists(private_key_path) or os.path.exists(public_key_path):
-            return get_filenames(key_directory_path,1)
-        return private_key_path,public_key_path
-    
-    n += 1
-    private_key_path = os.path.join(key_directory_path,private_key_file_name + f" ({n})")
-    public_key_path = os.path.join(key_directory_path,public_key_file_name + f" ({n}).pub")
+default_path = get_directory()
 
-    if os.path.exists(private_key_path) or os.path.exists(public_key_path):
-        return get_filenames(key_directory_path,n)
-    return private_key_path,public_key_path
+private_key_path = os.path.join(default_path,private_key_file_name)
+public_key_path = os.path.join(default_path,public_key_file_name)
     
 def get_keys():
     private_key = rsa.generate_private_key(
@@ -64,26 +53,49 @@ def save_keys(private_key_path,priv_key,public_key_path,pub_key):
         binary_file.write(pub_key)
         print(f'Your public key has been saved to "{public_key_path}"')
     print("==========================================")
-
-def key_exists(path:str,file_name:str)->bool:
-    return os.path.exists(os.path.join(path,file_name))
-
-def main():
-    key_directory_path = get_directory()
-    private_key_path,public_key_path = get_filenames(key_directory_path)
-    priv_key,pub_key = get_keys()
-    save_keys(
-        private_key_path=private_key_path,
-        priv_key=priv_key,
-        public_key_path=public_key_path,
-        pub_key=pub_key)
     
-def create_keys(path):
-    private_key_path,public_key_path = get_filenames(path)
+def create_keys():
+    global private_key_path
+    global public_key_path
     priv_key,pub_key = get_keys()
     save_keys(
         private_key_path=private_key_path,
         priv_key=priv_key,
         public_key_path=public_key_path,
         pub_key=pub_key)
-    return priv_key + "|" + pub_key
+    return [priv_key,pub_key]
+
+def get_keys():
+    privkey = ""
+    pubkey = ""
+    if not has_keys():
+        return [privkey,pubkey]
+    
+    global private_key_path
+    with open(private_key_path, "r") as file:
+        privkey = file.read()
+    global public_key_path
+    with open(public_key_path, "r") as file:
+        pubkey = file.read()
+
+    return [privkey,pubkey]
+
+def get_private_key():
+    global private_key_path
+    if not os.path.exists(private_key_path):
+        return ""
+    with open(private_key_path, "r") as file:
+        return file.read()
+    
+def get_public_key():
+    global public_key_path
+    if not os.path.exists(public_key_path):
+        return ""
+    with open(public_key_path, "r") as file:
+        return file.read()
+
+def has_keys():
+    global public_key_path
+    global private_key_path
+    return os.path.exists(public_key_path) and os.path.exists(private_key_path)
+    
