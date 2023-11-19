@@ -2,6 +2,7 @@ package com.udocoin.udocoin_wallet
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Log
@@ -34,7 +35,10 @@ class MainActivity : AppCompatActivity() {
             val pubKey = keyManagerModule.callAttr("get_public_key").toString()
             findViewById<TextView>(R.id.text1).text = privKey
             findViewById<TextView>(R.id.text2).text = pubKey
+        }else{
         }
+        val intent = Intent(this, CodeScannerActivity::class.java)
+        startActivity(intent)
 
         findViewById<Button>(R.id.create_keys_button).setOnClickListener{
             val keys = keyManagerModule.callAttr("create_keys").toList()//.split("|")

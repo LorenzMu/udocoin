@@ -18,6 +18,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name="com.udocoin.udocoin_wallet.CodeScannerActivity"
+            android:exported="true">
+        </activity>
+        <activity
+            android:name="com.udocoin.udocoin_wallet.TransactionActivity"
+            android:exported="true">
+        </activity>
     </application>
 
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false"/>
 </manifest>

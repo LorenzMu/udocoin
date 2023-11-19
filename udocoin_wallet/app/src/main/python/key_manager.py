@@ -5,7 +5,7 @@ from cryptography.hazmat.primitives.serialization import Encoding, NoEncryption,
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
-import os,sys
+import os
 
 directory_name = ".udocoin"
 private_key_file_name = "priv_key"
@@ -32,7 +32,7 @@ default_path = get_directory()
 private_key_path = os.path.join(default_path,private_key_file_name)
 public_key_path = os.path.join(default_path,public_key_file_name)
     
-def get_keys():
+def generate_keys():
     private_key = rsa.generate_private_key(
         public_exponent=65537,
         key_size=512,
@@ -57,7 +57,7 @@ def save_keys(private_key_path,priv_key,public_key_path,pub_key):
 def create_keys():
     global private_key_path
     global public_key_path
-    priv_key,pub_key = get_keys()
+    priv_key,pub_key = generate_keys()
     save_keys(
         private_key_path=private_key_path,
         priv_key=priv_key,
