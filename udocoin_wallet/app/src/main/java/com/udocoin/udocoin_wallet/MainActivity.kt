@@ -15,39 +15,26 @@ import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
 
 class MainActivity : AppCompatActivity() {
-    private val TAG = "[MainActivity]"
+    private val TAG = "[MAIN ACTIVITY]"
+    lateinit var keyManager: KeyManager
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        if (!Python.isStarted()) {
-            Python.start(AndroidPlatform(this))
-        }
+        keyManager = KeyManager.getInstance()
 
-        val py = Python.getInstance()
-        val keyManagerModule = py.getModule("key_manager")
-
-        var hasKeys = keyManagerModule.callAttr("has_keys").toBoolean()
-        if(hasKeys){
-            val privKey = keyManagerModule.callAttr("get_private_key").toString()
-            val pubKey = keyManagerModule.callAttr("get_public_key").toString()
-            findViewById<TextView>(R.id.text1).text = privKey
-            findViewById<TextView>(R.id.text2).text = pubKey
-        }else{
+        /** go to login activity if there are no keys */
+        if(!keyManager.hasKeys(this)){
+            Toast.makeText(this, "No keys found.",Toast.LENGTH_SHORT).show()
+            val intent = Intent(this, LoginActivity::class.java)
+            startActivity(intent)
         }
-        val intent = Intent(this, CodeScannerActivity::class.java)
-        startActivity(intent)
-
-        findViewById<Button>(R.id.create_keys_button).setOnClickListener{
-            val keys = keyManagerModule.callAttr("create_keys").toList()//.split("|")
-            val privKey = keys[0].toString()
-            val pubKey = keys[1].toString()
-            Log.d(TAG, privKey)
-            Log.d(TAG, pubKey)
-            hasKeys = true
-        }
+        val privKey = keyManager.getPrivateKey(this)
+        val pubKey = keyManager.getPublicKey(this)
+        findViewById<TextView>(R.id.text1).text = privKey
+        findViewById<TextView>(R.id.text2).text = pubKey
 
     }
 }
