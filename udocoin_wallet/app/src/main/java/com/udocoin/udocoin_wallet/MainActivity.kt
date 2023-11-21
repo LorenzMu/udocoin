@@ -1,18 +1,14 @@
 package com.udocoin.udocoin_wallet
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.Intent
-import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.chaquo.python.PyException
-import com.chaquo.python.Python
-import com.chaquo.python.android.AndroidPlatform
+import com.udocoin.udocoin_wallet.modules.KeyManager
 
 class MainActivity : AppCompatActivity() {
     private val TAG = "[MAIN ACTIVITY]"
@@ -40,12 +36,19 @@ class MainActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.text2).text = pubKey
 
         findViewById<Button>(R.id.reset_keys).setOnClickListener { resetKeys() }
+        findViewById<Button>(R.id.create_transaction).setOnClickListener { startTransaction() }
     }
 
     private fun resetKeys(){
         keyManager.setPrivateKey(this,"")
         keyManager.setPublicKey(this,"")
         val intent = Intent(this, LoginActivity::class.java)
+        startActivity(intent)
+    }
+
+    private fun startTransaction(){
+        val intent = Intent(this, CodeScannerActivity::class.java)
+        intent.putExtra("redirectActivity","TransactionActivity")
         startActivity(intent)
     }
 }

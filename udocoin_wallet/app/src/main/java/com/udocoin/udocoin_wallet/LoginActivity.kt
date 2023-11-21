@@ -7,10 +7,9 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.Toast
+import com.udocoin.udocoin_wallet.modules.KeyManager
 import java.io.BufferedReader
-import java.io.File
 import java.io.InputStreamReader
-import java.security.PrivateKey
 
 class LoginActivity : AppCompatActivity() {
     lateinit var keyManager: KeyManager
@@ -23,7 +22,6 @@ class LoginActivity : AppCompatActivity() {
         /** callback from scanner activity */
         val scanResult = intent.getStringExtra("scanResult")
         if(scanResult != null ){
-            Log.d(TAG,"FOUND SCAN RESULT")
             handlePrivateKeyUpload(scanResult)
         }
         /** Go to main activity if keys are valid */
@@ -77,9 +75,7 @@ class LoginActivity : AppCompatActivity() {
             }
 
             val fileContent = stringBuilder.toString()
-            // Now 'fileContent' contains the content of the selected text file
             Toast.makeText(this, "File content: $fileContent", Toast.LENGTH_LONG).show()
-//            handlePrivateKeyUpload(fileContent)
             reader.close()
             inputStream?.close()
             return fileContent
@@ -102,28 +98,15 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun handlePrivateKeyUpload(privateKey: String){
-        Log.d(TAG,"handling private key upload...")
         if(!keyManager.isValidPrivateKey(this,privateKey)){
             Toast.makeText(this,"Invalid private key.",Toast.LENGTH_SHORT).show()
-            Log.d(TAG,"Keys are not valid! Canceling")
             return
         }
-        Log.d(TAG,"Keys are valid")
-//        val publicKey = keyManager.getPublicKeyFromPrivateKey(this,privateKey)
-//        if(publicKey == null){
-//            Toast.makeText(this,"Error getting public key from private key.",Toast.LENGTH_SHORT).show()
-//            Log.d(TAG, "Error creating PUBLIC key! Canceling")
-//            return
-//        }
-        Log.d(TAG,"Created public key successfully :)")
         keyManager.setPrivateKey(this,privateKey)
-//        keyManager.setPublicKey(this,publicKey)
         val publicKey = keyManager.setPublicKeyFromPrivateKey(this,privateKey)
         if(publicKey == null){
             Toast.makeText(this,"Error creating public key.",Toast.LENGTH_SHORT).show()
-            Log.d(TAG,"Error creating public key.")
         }
-        Log.d(TAG,"Starting main activity... ")
         val intent = Intent(this, MainActivity::class.java)
         startActivity(intent)
         finish()

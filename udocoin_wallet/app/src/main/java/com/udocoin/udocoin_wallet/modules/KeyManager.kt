@@ -1,24 +1,21 @@
-package com.udocoin.udocoin_wallet
+package com.udocoin.udocoin_wallet.modules
 
 import android.content.Context
-import android.util.Log
-import android.widget.Toast
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
 
 class KeyManager() {
 
-    private val TAG = "[KEY GENERATOR]"
+    private val TAG = "[KEY MANAGER]"
 
     companion object {
-        private var instance:KeyManager? = null
+        private var instance: KeyManager? = null
         fun getInstance(): KeyManager = instance ?: synchronized(this){
-            instance ?:KeyManager().also { instance = it }
+            instance ?: KeyManager().also { instance = it }
         }
     }
 
     private val keyManagerModule = "key_manager" // key_manager.py
-    private val transactionsModule = "transactions" // transactions.py
 
     private fun getPythonInstance(context: Context): Python {
         if (!Python.isStarted()) {
@@ -103,4 +100,5 @@ class KeyManager() {
             .callAttr("is_valid_key_pair_strings",privateKey,publicKey)
             .toBoolean()
     }
+
 }

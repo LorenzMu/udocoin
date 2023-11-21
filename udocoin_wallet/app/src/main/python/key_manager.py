@@ -105,10 +105,6 @@ def get_private_key_from_file_string()->str:
         return file.read()
     
 def write_binary_file(path:str,content:bytes):
-    print("******** PYTHON *********")
-    print("Writing binary file to " + path)
-    print("Content: " + str(content))
-    print("******** ****** *********")
     with open(path,"wb") as binary_file:
         binary_file.write(content)
     
@@ -148,5 +144,3 @@ def generate_and_safe_new_key_pair():
     public_key_bytes = generate_public_key_from_private_key(private_key_bytes)
     safe_private_key_to_file(private_key_bytes)
     safe_public_key_to_file(public_key_bytes)
-
-print(__name__)

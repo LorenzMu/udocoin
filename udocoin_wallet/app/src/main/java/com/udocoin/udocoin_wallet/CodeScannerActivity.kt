@@ -23,6 +23,9 @@ class CodeScannerActivity : AppCompatActivity() {
             _redirectActivity.equals("LoginActivity") -> {
                 LoginActivity::class.java
             }
+            _redirectActivity.equals("TransactionActivity") -> {
+                TransactionActivity::class.java
+            }
             else -> {
                 MainActivity::class.java
             }
