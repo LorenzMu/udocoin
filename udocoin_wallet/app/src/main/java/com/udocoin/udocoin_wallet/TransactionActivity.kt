@@ -10,13 +10,13 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.udocoin.udocoin_wallet.modules.KeyManager
-import com.udocoin.udocoin_wallet.modules.TransactionManager
+import com.udocoin.udocoin_wallet.modules.BlockchainManager
 import java.lang.Float
 
 class TransactionActivity : AppCompatActivity() {
     private val TAG = "[TRANSACTION ACTIVITY]"
     lateinit var keyManager: KeyManager
-    lateinit var transactionManager: TransactionManager
+    lateinit var blockchainManager: BlockchainManager
     lateinit var privateKey: String
     lateinit var publicKey: String
     lateinit var destinationPublicKey: String
@@ -25,7 +25,7 @@ class TransactionActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_transaction)
         keyManager = KeyManager.getInstance()
-        transactionManager = TransactionManager.getInstance()
+        blockchainManager = BlockchainManager.getInstance()
         try{
             destinationPublicKey = intent.getStringExtra("scanResult")!!
             privateKey = keyManager.getPrivateKey(this)!!
@@ -50,7 +50,7 @@ class TransactionActivity : AppCompatActivity() {
             Toast.makeText(this,"Invalid amount format.",Toast.LENGTH_SHORT).show()
             return
         }
-        val transaction = transactionManager.createTransaction(
+        val transaction = blockchainManager.createTransaction(
             this,
             privateKey,
             publicKey,
