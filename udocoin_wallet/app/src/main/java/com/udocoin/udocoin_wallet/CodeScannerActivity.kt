@@ -17,6 +17,17 @@ class CodeScannerActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_code_scanner)
+
+        val _redirectActivity = intent.getStringExtra("redirectActivity")
+        val redirectActivity = when {
+            _redirectActivity.equals("LoginActivity") -> {
+                LoginActivity::class.java
+            }
+            else -> {
+                MainActivity::class.java
+            }
+        }
+
         val scannerView = findViewById<CodeScannerView>(R.id.scanner_view)
         codeScanner = CodeScanner(this, scannerView)
         codeScanner.camera = CodeScanner.CAMERA_BACK // or CAMERA_FRONT or specific camera id
@@ -31,8 +42,8 @@ class CodeScannerActivity : AppCompatActivity() {
             runOnUiThread {
 //                Toast.makeText(this, "Scan result: ${it.text}", Toast.LENGTH_LONG).show()
 
-                val intent = Intent(this, TransactionActivity::class.java)
-                intent.putExtra("scan_result",it.text)
+                val intent = Intent(this,redirectActivity)
+                intent.putExtra("scanResult",it.text)
                 startActivity(intent)
             }
         }

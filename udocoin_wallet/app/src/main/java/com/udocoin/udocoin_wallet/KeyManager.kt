@@ -59,7 +59,17 @@ class KeyManager() {
         }
         return getPythonInstance(context)
             .getModule(keyManagerModule)
-            .callAttr("generate_public_key_from_private_key_string",privateKey)
+            .callAttr("generate_public_key_string_from_private_key_string",privateKey)
+            .toString()
+    }
+
+    fun setPublicKeyFromPrivateKey(context: Context,privateKey: String):String?{
+        if(!isValidPrivateKey(context,privateKey)){
+            return null
+        }
+        return getPythonInstance(context)
+            .getModule(keyManagerModule)
+            .callAttr("safe_public_key_from_private_key_string",privateKey)
             .toString()
     }
 

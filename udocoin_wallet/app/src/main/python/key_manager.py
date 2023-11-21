@@ -43,6 +43,15 @@ def generate_public_key_from_private_key_string(private_key:str)->bytes:
     private_key = bytes(private_key, 'utf-8')
     return generate_public_key_from_private_key(private_key)
 
+def generate_public_key_string_from_private_key_string(private_key:str)->str:
+    return str(generate_public_key_from_private_key_string(private_key))
+
+def safe_public_key_from_private_key_string(private_key:str)->str:
+    private_key = bytes(private_key, 'utf-8')
+    public_key = generate_public_key_from_private_key(private_key)
+    safe_public_key_to_file(public_key)
+    return str(public_key)
+
 def is_valid_key_pair(private_key:bytes,public_key:bytes)->bool:
     public_key_bytes = generate_public_key_from_private_key(private_key)
     return (public_key_bytes == public_key)
@@ -96,6 +105,10 @@ def get_private_key_from_file_string()->str:
         return file.read()
     
 def write_binary_file(path:str,content:bytes):
+    print("******** PYTHON *********")
+    print("Writing binary file to " + path)
+    print("Content: " + str(content))
+    print("******** ****** *********")
     with open(path,"wb") as binary_file:
         binary_file.write(content)
     
@@ -118,9 +131,14 @@ def safe_private_key_to_file_string(private_key:str):
     safe_private_key_to_file(private_key_bytes)
 
 def has_valid_keys()->bool:
+    print("Searching for vaild keys...")
     try:
         private_key = get_private_key_from_file()
+        print("Private key: " + str(private_key))
         public_key = get_public_key_from_file()
+        print("Public key: " + str(public_key))
+        print("Private key is valid: " + str(is_valid_private_key(private_key)))
+        print("Keypair is valid: " + str(is_valid_key_pair(private_key,public_key)))
         return is_valid_private_key(private_key) and is_valid_key_pair(private_key,public_key)
     except:
         return False
