@@ -132,6 +132,7 @@ dist
 
 #IDEA
 .idea
+.gradle
 
 #pycache
 *.pyc

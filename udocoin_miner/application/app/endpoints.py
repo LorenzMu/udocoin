@@ -1,5 +1,5 @@
 from app import app,server_comm
-from flask import request,redirect
+from flask import request,redirect,abort
 import os,json
 
 from app.miner import MINER
@@ -59,3 +59,11 @@ def miner_continue():
 def cons_test():
     consensus_test()
     return "Ran consesnsus test, check console for more information"
+
+@app.route("/miner/get_balance/<public_key>")
+def get_balance(public_key):
+    if public_key == "all":
+        return MINER.blockchain_instance.balances
+    if public_key not in MINER.blockchain_instance.balances.keys():
+        return abort(404)
+    return {"key":public_key,"balance": MINER.blockchain_instance.balances[public_key]}

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#FF30475e</color>
+    <color name="colorPrimaryDark">#FF1D364E</color>
+    <color name="colorAccent">#FFe29e21</color>
+
+    <color name="black">#FF222831</color>
+    <color name="white">#FFDDDDDD</color>
+    <color name="udo_blue">#FF30475e</color>
+    <color name="udo_dark_blue">#FF1D364E</color>
+    <color name="udo_red">#FFf05454</color>
+    <color name="udo_orange">#FFe29e21</color>
+    <color name="matthi_grey">#FFACACAC</color>
+</resources>
