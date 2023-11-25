@@ -28,6 +28,7 @@ class LoginActivity : AppCompatActivity() {
         if (keyManager.hasValidKeys(this)){
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
+            finish()
         }
         /** Stay at login activity if there are no keys or keys are invalid */
         findViewById<Button>(R.id.upload_button).setOnClickListener { showFileChooser() }

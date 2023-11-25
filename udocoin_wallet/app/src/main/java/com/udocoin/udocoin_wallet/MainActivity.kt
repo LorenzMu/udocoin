@@ -30,21 +30,13 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
             finish()
         }
-        val privKey = keyManager.getPrivateKey(this)
-        val pubKey = keyManager.getPublicKey(this)
-        findViewById<TextView>(R.id.text1).text = privKey
-        findViewById<TextView>(R.id.text2).text = pubKey
-
-        findViewById<Button>(R.id.reset_keys).setOnClickListener { resetKeys() }
         findViewById<Button>(R.id.create_transaction).setOnClickListener { startTransaction() }
+        findViewById<Button>(R.id.view_profile).setOnClickListener {
+            val intent = Intent(this,ProfileActivity::class.java)
+            startActivity(intent)
+        }
     }
 
-    private fun resetKeys(){
-        keyManager.setPrivateKey(this,"")
-        keyManager.setPublicKey(this,"")
-        val intent = Intent(this, LoginActivity::class.java)
-        startActivity(intent)
-    }
 
     private fun startTransaction(){
         val intent = Intent(this, CodeScannerActivity::class.java)
