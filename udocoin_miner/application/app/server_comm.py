@@ -228,12 +228,15 @@ def on_broadcast_new_blockchain(data):
 @socketio.on('broadcast_new_block')
 def on_broadcast_new_block(data):
     if not message_previously_received(data):
+        
         new_block = data["block"]
         block = MINER.blockchain_instance.import_blockchain("[" + new_block + "]")
         if block is None:
             return
         if block.index > MINER.blockchain_instance.blockchain[-1].index:
             return_value = MINER.blockchain_instance.detect_blockchain_append(block)
+            if return_value == ReturnValues.SingleBlockAppended:
+                MINER.update_mempool(depth_to_purge=1)
 
             #Ask the peer that broadcasted the block for their previous five blocks
             if return_value == ReturnValues.SingleBlockRejected:
@@ -246,9 +249,11 @@ def on_return_unconfirmed_blocks(data):
     if not message_previously_received(data):
         new_blocks = data["blocks"]
         blocks = MINER.blockchain_instance.import_blockchain(new_blocks)
-        return_value = MINER.blockchain_instance.detect_multiple_changes(blocks)
+        return_value, fork_index = MINER.blockchain_instance.detect_multiple_changes(blocks)
         if return_value == ReturnValues.BlocksReplaced:
             print("At least one block was replaced")
+            for i in range((len(MINER.blockchain_instance.blockchain)-fork_index), 0):
+                MINER.update_mempool(depth_to_purge=i)
         #If there are even more changes, ask for the entire blockchain and run the consensus algorithm
         if return_value == ReturnValues.BlocksRejected:
             get_latest_blockchain()

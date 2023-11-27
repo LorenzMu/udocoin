@@ -128,13 +128,14 @@ class UdocoinMiner:
         cut_off_time = datetime.datetime.now() - datetime.timedelta(days = max_age_days, hours=max_age_hours)
 
         #Get transaction_list from block from which to filter
-        transaction_list =  self.blockchain_instance.blockchain[-depth_to_purge].data.transaction_list
+        if len(self.blockchain_instance.blockchain)>=depth_to_purge:
+            transaction_list =  self.blockchain_instance.blockchain[-depth_to_purge].data.transaction_list
         
-        #Delete all already integrated blocks from the mempool
-        transactions_without_blocks = [s_t for s_t in self.mempool if s_t not in transaction_list]
-        
-        #Delete all transactions that are too old
-        self.mempool = [s_t for s_t in transactions_without_blocks if verify_transaction(s_t).timestamp > cut_off_time]
+            #Delete all already integrated blocks from the mempool
+            transactions_without_blocks = [s_t for s_t in self.mempool if s_t not in transaction_list]
+            
+            #Delete all transactions that are too old
+            self.mempool = [s_t for s_t in transactions_without_blocks if verify_transaction(s_t).timestamp > cut_off_time]
 
     #Collects transactions from the mempool that can be published in the next published block in one list    
     def get_valid_transactions(self) -> BlockData:

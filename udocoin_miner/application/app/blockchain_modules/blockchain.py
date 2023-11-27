@@ -246,8 +246,8 @@ class Blockchain:
                     except IndexError:
                         self.blockchain.append(block)
                     self.update_balances()
-            return ReturnValues.BlocksReplaced
-        return ReturnValues.BlocksRejected
+            return ReturnValues.BlocksReplaced, fork_index
+        return ReturnValues.BlocksRejected, "NaN"
 
 
                     
