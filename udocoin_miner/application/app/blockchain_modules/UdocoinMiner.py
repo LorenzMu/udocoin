@@ -6,6 +6,7 @@ import threading
 from app import server_comm as server_comm
 from typing import List
 import dataclasses
+import datetime
 
 #Separate class, because different people may want to implement it differently
 #The blockchain as the central data structure is the consistent class and may not have different implementations
@@ -123,7 +124,7 @@ class UdocoinMiner:
     #Deletes Signed Transactions from the mempool if the transaction has been confirmed in a deep block or the transaction is too old.
     #depth_to_purge is the n-th to last Block in the blockchain
     #max_age is the maximum age transaction may have in the mempool in days
-    def update_mempool(self, depth_to_purge = 5, max_age_days = 1, max_age_hours = 0 ) -> None:
+    def update_mempool(self, depth_to_purge = 6, max_age_days = 1, max_age_hours = 0 ) -> None:
         cut_off_time = datetime.datetime.now() - datetime.timedelta(days = max_age_days, hours=max_age_hours)
 
         #Get transaction_list from block from which to filter
@@ -136,7 +137,7 @@ class UdocoinMiner:
         self.mempool = [s_t for s_t in transactions_without_blocks if verify_transaction(s_t).timestamp > cut_off_time]
 
     #Collects transactions from the mempool that can be published in the next published block in one list    
-    def get_valid_transactions(self) -> list[SignedTransaction]:
+    def get_valid_transactions(self) -> BlockData:
         publishable_transactions = []
         temp_balances = self.blockchain_instance.balances
 
@@ -154,7 +155,7 @@ class UdocoinMiner:
                     temp_balances[transaction_data.destination_public_key] = transaction_data.amount
                 publishable_transactions.append(transaction_data)
         
-        publishable_signed_transactions = [s_t for s_t in self.mempool if (TransactionData(**loads(s_t.message)) in publishable_transactions)]
+        publishable_signed_transactions = BlockData([s_t for s_t in self.mempool if (TransactionData(**loads(s_t.message)) in publishable_transactions)])
         return publishable_signed_transactions
         
 class EnhancedJSONEncoder(json.JSONEncoder):
@@ -166,7 +167,7 @@ class EnhancedJSONEncoder(json.JSONEncoder):
 
 def static_data():
     pub_key_str = get_pub_key_string()
-    my_transaction_data = TransactionData(pub_key_str, "my_destination_adress", timestamp=datetime.now(), amount=50)
+    my_transaction_data = TransactionData(pub_key_str, "my_destination_adress", timestamp=datetime.datetime.now(), amount=50)
     signed_trans = sign_transaction(get_priv_key(), bytes(pub_key_str,"utf-8"), my_transaction_data)
     verify_transaction(signed_trans)
 

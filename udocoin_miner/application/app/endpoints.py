@@ -74,5 +74,5 @@ def get_balance(public_key):
     return MINER.blockchain_instance.balances[public_key]
 
 @app.route("/miner/mempool")
-def get_balance():
+def get_mempool():
     return MINER.mempool

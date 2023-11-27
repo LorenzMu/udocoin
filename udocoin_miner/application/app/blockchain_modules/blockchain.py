@@ -102,7 +102,7 @@ class Blockchain:
             while self.index_confirmed < len(self.blockchain)-5:
                 new_balances = self.balances
 
-                block = self.blockchain[self.update_balances]
+                block = self.blockchain[self.index_confirmed]
                 
                 #Get Block values summed per public key
                 balance_from_mining = AccountBalance(block.block_author_public_key, block.block_value)
