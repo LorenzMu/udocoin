@@ -71,6 +71,8 @@ def post_transaction():
 
 @app.route("/miner/get_balance/<public_key>")
 def get_balance(public_key):
+    if public_key == "all":
+        return MINER.blockchain_instance.balances
     return MINER.blockchain_instance.balances[public_key]
 
 @app.route("/miner/mempool")
