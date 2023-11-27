@@ -6,20 +6,21 @@ import dataclasses
 from base64 import b64encode, b64decode
 import dacite
 from copy import deepcopy
+from ReturnValues import ReturnValues
 
 class Blockchain:
     def __init__(self):
         #If no blockchain is found in the network, create your own blockchain 
         self.blockchain: list[Block] = []
         self.balances: dict[str, float] = {}
+        self.index_confirmed = 0
 
         if self.get_consensus_blockchain(self.blockchain) == None:
             genesis_block = Block(data = BlockData(transaction_list=[]),
                                   proof_of_work= 1, prev_hash= "0", index = 0)
-            self.update_blockchain(genesis_block)
-            
+            self.append_blockchain(genesis_block)       
 
-    def update_blockchain(self, block: Block):
+    def append_blockchain(self, block: Block) -> ReturnValues:
         self.blockchain.append(block)
         print("appending new block with prev_hash:", block.prev_hash)
         print("This block's hash is: ", self.hash(block))
@@ -27,10 +28,10 @@ class Blockchain:
         if len(self.blockchain) > 1:
             if not self.validate_blockchain(self.blockchain):
                 self.blockchain.pop()
-                raise Exception("Blockchain not valid, block rejected!")
-            #If there are more than 5 blocks, the blockchain is long enough to start updating balances 
-            if len(self.blockchain) > 5:
-                self.update_balances(index_start = (len(self.blockchain)-5))
+                return ReturnValues.SingleBlockRejected
+            
+            self.update_balances()
+            return ReturnValues.SingleBlockAppended
     
     #Do some arbitrary math to "work" the system
     def generate_pre_hash(self, new_proof: int, previous_proof: int, index: int, data: str) -> str:
@@ -92,40 +93,46 @@ class Blockchain:
         return 1024 / (2**(index//100))
 
 
-    #Account balance is valid once blocks are index_start blocks deep in the blockchain
-    def update_balances(self, index_start: int):
-        new_balances = self.balances
+    #Account balance is valid once blocks are 5 blocks deep in the blockchain
+    #At this point we must check how many blocks changed when the blockchain updated
+    def update_balances(self):
+         #If there are more than 5 blocks, the blockchain is long enough to start updating balances 
+        if len(self.blockchain) > 5:
+            #Update balances for each newly confirmable block
+            while self.index_confirmed < len(self.blockchain)-5:
+                new_balances = self.balances
 
-        block = self.blockchain[index_start]
-        
-        #Get Block values summed per public key
-        balance_from_mining = AccountBalance(block.block_author_public_key, block.block_value)
-        if block.block_author_public_key in new_balances.keys():
-            new_balances[block.block_author_public_key] += block.block_value
-        else:
-            new_balances[block.block_author_public_key] = block.block_value
-
-        #Subtract and add balances for each transaction in each block
-        for signed_transaction in block.data.transaction_list:
-            message = TransactionData(**json.loads(signed_transaction.message))
-            origin_public_key = signed_transaction.origin_public_key.decode('utf-8')
-            if origin_public_key in new_balances.keys():
-                if new_balances[origin_public_key] >= message.amount:
-                    new_balances[origin_public_key] -= message.amount
-                    if message.destination_public_key in new_balances.keys():
-                        new_balances[message.destination_public_key] += message.amount
-                    else:
-                        new_balances[message.destination_public_key] = message.amount
+                block = self.blockchain[self.update_balances]
+                
+                #Get Block values summed per public key
+                balance_from_mining = AccountBalance(block.block_author_public_key, block.block_value)
+                if block.block_author_public_key in new_balances.keys():
+                    new_balances[block.block_author_public_key] += block.block_value
                 else:
-                    self.blockchain.pop()
-                    raise Exception("Account Balance of Origin Adress too low! Block rejected!")
-            else:
-                self.blockchain.pop()
-                raise Exception("Origin Address not found. Block rejected!")
+                    new_balances[block.block_author_public_key] = block.block_value
+
+                #Subtract and add balances for each transaction in each block
+                for signed_transaction in block.data.transaction_list:
+                    message = TransactionData(**json.loads(signed_transaction.message))
+                    origin_public_key = signed_transaction.origin_public_key.decode('utf-8')
+                    if origin_public_key in new_balances.keys():
+                        if new_balances[origin_public_key] >= message.amount:
+                            new_balances[origin_public_key] -= message.amount
+                            if message.destination_public_key in new_balances.keys():
+                                new_balances[message.destination_public_key] += message.amount
+                            else:
+                                new_balances[message.destination_public_key] = message.amount
+                        else:
+                            self.blockchain.pop()
+                            raise Exception("Account Balance of Origin Address too low! Block rejected!")
+                    else:
+                        self.blockchain.pop()
+                        raise Exception("Origin Address not found. Block rejected!")
+                self.index_confirmed+=1
 
         self.balances = new_balances
 
-    def export_blockchain(self):
+    def export_blockchain(self, unconfirmed_blocks = False, single_block = False):
         if self.validate_blockchain(self.blockchain):
             exported_blockchain = deepcopy(self.blockchain)
             for block in exported_blockchain:
@@ -140,6 +147,10 @@ class Blockchain:
     
             # with open("blockchain_test_export","w") as file:
             #     file.write(json.dumps(exported_blockchain, cls=EnhancedJSONEncoder))
+            if unconfirmed_blocks:
+                return json.dumps(exported_blockchain[-5:], cls=EnhancedJSONEncoder)
+            if single_block:
+                return json.dumps(exported_blockchain[-1], cls=EnhancedJSONEncoder)
             return json.dumps(exported_blockchain, cls=EnhancedJSONEncoder)
         else:
             raise Exception("Export failed due to invalid blockchain!")
@@ -166,9 +177,9 @@ class Blockchain:
         # with open("blockchain_test_import","w") as file:
         #     file.write(str(imported_blockchain))
 
-        if self.validate_blockchain(imported_blockchain):
-            print("import succesful!")
-            return imported_blockchain
+        #if self.validate_blockchain(imported_blockchain):
+        #    print("import succesful!")
+        return imported_blockchain
 
 
     #Here is where we will pass a list of blockchains from our P2P network to find a consensus blockchain
@@ -198,6 +209,48 @@ class Blockchain:
         #If no consensus blockchain is found, create your own in __init__
         else:
             return None
+
+    #Undoes a transaction; Gets called when one or multiple blocks are replaced in the blockchain
+    def undo_transaction(self, signed_transaction: SignedTransaction):
+        message = TransactionData(**json.loads(signed_transaction.message))
+        origin_public_key = message.origin_public_key
+       
+        self.balances[origin_public_key] += message.amount
+        self.balances[message.destination_public_key] -= message.amount
+
+
+    #Checks if new block's prev hash lines up with previous block's hash
+    def detect_blockchain_append(self, new_block: Block):
+        #Hash previous Block and see if hashes allign
+        return_value = ReturnValues.SingleBlockRejected
+        if self.hash(self.blockchain[-1]) == new_block.prev_hash:
+            return_value = self.append_blockchain(new_block)
+        if return_value == ReturnValues.SingleBlockRejected:
+            print("Block Rejected")
+        return return_value
+    
+    #Checks if there was a recent fork in the blockchain. If there was, it replaces blocks up to 5 blocks deep
+    def detect_multiple_changes(self, multiple_blocks: list[Block]):
+        #first check where the fork occured
+        fork_index = "NaN"
+        for block in multiple_blocks:
+            if block.prev_hash != self.hash(self.blockchain[block.index-1]):
+                fork_index = block.index
+                break
+        #If a fork was detected in yet unconfirmed blocks, simply replace all blocks following the fork with the blocks received via the network
+        if fork_index != "NaN":
+            for block in multiple_blocks:
+                if block.index >= fork_index-1:
+                    try:
+                        self.blockchain[fork_index] = block
+                    except IndexError:
+                        self.blockchain.append(block)
+                    self.update_balances()
+            return ReturnValues.BlocksReplaced
+        return ReturnValues.BlocksRejected
+
+
+                    
 
 class EnhancedJSONEncoder(json.JSONEncoder):
         def default(self, o):

@@ -5,6 +5,7 @@ import os,time
 import threading
 from app import server_comm as server_comm
 from typing import List
+import dataclasses
 
 #Separate class, because different people may want to implement it differently
 #The blockchain as the central data structure is the consistent class and may not have different implementations
@@ -33,9 +34,9 @@ class UdocoinMiner:
                 self.mining = False
             print("Found new Block!!!")
             # TODO handle new_block
-            exported_blockchain = self.blockchain_instance.export_blockchain()
+            exported_block = self.blockchain_instance.export_blockchain(single_block=True)
             # broadcast blockchain instance
-            server_comm.broadcast_new_blockchain(exported_blockchain)
+            server_comm.broadcast_new_block(exported_block)
 
     def restart_mining(self):
         self.stop_mining()
@@ -63,13 +64,14 @@ class UdocoinMiner:
         prev_hash = self.blockchain_instance.hash(previous_block)
 
         data = self.get_valid_transactions()
+        
         #for now use static data
         #data = static_data()
         new_block = Block(data=data, proof_of_work=new_PoW, prev_hash=prev_hash, index=new_index, 
                         block_author_public_key=get_pub_key_string(),
                         block_value=self.blockchain_instance.get_block_value(new_index))
 
-        self.blockchain_instance.update_blockchain(block = new_block)
+        self.blockchain_instance.append_blockchain(block = new_block)
         self.update_mempool()
         self.new_proof = self.proof_to_start_with
         return new_block
@@ -106,8 +108,11 @@ class UdocoinMiner:
         if self.validate_transaction(signed_transaction, balances= self.blockchain_instance.balances): 
             if signed_transaction not in self.mempool:
                 self.mempool.append(SignedTransaction)
-                return "Received transaction and added it to mempool. Your transaction will be processed once 5 more blocks have been published"
+                
                 #TODO: !&!&!&!&!&!&!&!&!& Broadcast transactions to other peers here if os.environ["IS_SEED_SERVER"] == "True" !&!&!&!&!&!&!&!&!&!&!&!&!
+                if os.environ["IS_SEED_SERVER"]:
+                    server_comm.broadcast_transaction_request(json.dumps(signed_transaction,cls=EnhancedJSONEncoder))
+                return "Received transaction and added it to mempool. Your transaction will be processed once 5 more blocks have been published"
             else:
                 return "Transaction request already received."
         else:
@@ -149,10 +154,14 @@ class UdocoinMiner:
                     temp_balances[transaction_data.destination_public_key] = transaction_data.amount
                 publishable_transactions.append(transaction_data)
         
-        publishable_signed_transactions = [s_t for s_t in self.mempool if (TransactionData(**loads(signed_transaction.message)) in publishable_transactions)]
+        publishable_signed_transactions = [s_t for s_t in self.mempool if (TransactionData(**loads(s_t.message)) in publishable_transactions)]
         return publishable_signed_transactions
         
-
+class EnhancedJSONEncoder(json.JSONEncoder):
+        def default(self, o):
+            if dataclasses.is_dataclass(o):
+                return dataclasses.asdict(o)
+            return super().default(o)
         
 
 def static_data():

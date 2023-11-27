@@ -6,6 +6,9 @@ import os,json,pathlib
 import requests
 import socketio as client_socketio
 import time
+from app.blockchain_modules.ReturnValues import ReturnValues
+from app.blockchain_modules.udocoin_dataclasses import SignedTransaction
+import dacite
 
 from app.miner import MINER
 
@@ -89,6 +92,9 @@ def get_latest_blockchain():
     consensus_blockchain = MINER.blockchain_instance.get_consensus_blockchain(blockchains)
     if consensus_blockchain != MINER.blockchain_instance.blockchain:
         MINER.blockchain_instance.blockchain = consensus_blockchain
+        MINER.blockchain_instance.index_confirmed = 0
+        MINER.blockchain_instance.balances = {}
+        MINER.blockchain_instance.update_balances()
         MINER.restart_mining()
 
 @app.route("/register",methods=["POST"])
@@ -106,12 +112,44 @@ def broadcast_data(data:dict):
     socketio.emit("broadcast_data",data)
     return data
 
-def broadcast_new_blockchain(exported_blockchain:str):
-    bf,bd = "broadcast_new_blockchain",{"blockchain":exported_blockchain,"broadcast_id":time.time()}
+def broadcast_new_blockchain(exported_blockchain:str="",blockchain_data = {}):
+    if exported_blockchain!="":
+        bf,bd = "broadcast_new_blockchain",{"blockchain":exported_blockchain,"broadcast_id":time.time()}
+    else:
+        bf,bd = "broadcast_new_blockchain",blockchain_data
     print("Broadcasting new Blockchain :)")
     socketio.emit(bf,bd) # connections set up by clients
     for socket_client in socket_clients:
         socket_client.emit(bf,bd) # connections which the current server has started
+
+def broadcast_new_block(exported_block: str = "", block_data = {}):
+    if exported_block!="":
+        bf,bd = "broadcast_new_block",{"block": exported_block, "broadcast_id": time.time()}
+    else:
+        bf,bd = "broadcast_new_block", block_data
+    print("Broadcasting new Block :)")
+    socketio.emit(bf,bd) # connections set up by clients
+    for socket_client in socket_clients:
+        socket_client.emit(bf,bd) # connections which the current server has started
+
+def return_unconfirmed_blocks():
+    exported_blocks = MINER.blockchain_instance.export_blockchain(unconfirmed_blocks=True)
+    bf,bd = "return_unconfirmed_blocks",{"block": exported_blocks, "broadcast_id": time.time()}
+    print("Broadcasting multiple Blocks :)")
+    socketio.emit(bf,bd) # connections set up by clients
+    for socket_client in socket_clients:
+        socket_client.emit(bf,bd) # connections which the current server has started
+
+def broadcast_transaction_request(transaction: str="", transaction_data = {}):
+    if transaction != "":
+        bf,bd = "broadcast_transaction_request", {"transaction": transaction, "broadcast_id": time.time()}
+    else:
+        bf,bd = "broadcast_transaction_request", transaction_data
+    print("Broadcasting transaction request")
+    socketio.emit(bf,bd) # connections set up by clients
+    for socket_client in socket_clients:
+        socket_client.emit(bf,bd) # connections which the current server has started
+
 
 ########################
 # # socket functions # #
@@ -133,6 +171,15 @@ def set_socket_listeners(socket_client):
     @socketio.on('broadcast_new_blockchain')
     def on_broadcast_new_blockchain_(data):
         return on_broadcast_new_blockchain(data)
+    @socketio.on('broadcast_new_block')
+    def on_broadcast_new_block_(data):
+        return on_broadcast_new_block(data)
+    @socketio.on('return_unconfirmed_blocks')
+    def on_return_unconfirmed_blocks_():
+        return on_return_unconfirmed_blocks()
+    @socketio.on('broadcast_transaction_request')
+    def on_broadcast_transaction_request_():
+        return on_broadcast_transaction_request()
 
 # Receive events from connections set up by clients
 @socketio.on('broadcast_data')
@@ -162,23 +209,65 @@ def on_connect_to_seed_response(args):
 
 @socketio.on('broadcast_new_blockchain')
 def on_broadcast_new_blockchain(data):
-    # Only broadcast once
+    if not message_previously_received(data):
+        # validate new blockchain
+        new_blockchain = data["blockchain"]
+        unverified_blockchain = MINER.blockchain_instance.import_blockchain(new_blockchain)
+        verified_blockchain = MINER.blockchain_instance.validate_blockchain(unverified_blockchain)
+
+        if verified_blockchain is None:
+            return
+        consensus_blockchain = MINER.blockchain_instance.get_consensus_blockchain([MINER.blockchain_instance.blockchain,verified_blockchain])
+        if consensus_blockchain == MINER.blockchain_instance.blockchain:
+            return
+        # restart mining with new chain
+        MINER.blockchain_instance.blockchain = consensus_blockchain
+        MINER.restart_mining()
+        broadcast_new_blockchain(data={"blockchain":new_blockchain,"broadcast_id":data["broadcast_id"]})
+
+@socketio.on('broadcast_new_block')
+def on_broadcast_new_block(data):
+    if not message_previously_received(data):
+        new_block = data["block"]
+        block = MINER.blockchain_instance.import_blockchain("[" + new_block + "]")
+        if block is None:
+            return
+        return_value = MINER.blockchain_instance.detect_blockchain_append(block)
+
+        #Ask the peer that broadcasted the block for their previous five blocks
+        if return_value == ReturnValues.SingleBlockRejected:
+            #TODO: How do I get this SPECIFIC peer's blockchain?
+            return "????"
+        
+#If a new block's hash does not line up with the previous block's hash, get the peer's last five blocks and check for changes within
+@socketio.on('return_unconfirmed_blocks')
+def on_return_unconfirmed_blocks(data):
+    if not message_previously_received(data):
+        new_blocks = data["blocks"]
+        blocks = MINER.blockchain_instance.import_blockchain(new_blocks)
+        return_value = MINER.blockchain_instance.detect_multiple_changes(blocks)
+        if return_value == ReturnValues.BlocksReplaced:
+            print("At least one block was replaced")
+        #If there are even more changes, ask for the entire blockchain and run the consensus algorithm
+        if return_value == ReturnValues.BlocksRejected:
+            get_latest_blockchain()
+
+@socketio.on('broadcast_transaction_request')
+def on_broadcast_transaction_request(data):
+    if not message_previously_received(data):
+        transaction_dict = json.loads(data["transaction"])
+        transaction = dacite.from_dict(data_class=SignedTransaction, data={k: v for k, v in transaction_dict.items() if v is not None})
+        MINER.mempool.append(transaction)
+        broadcast_transaction_request(transaction_data=data)
+
+
+def message_previously_received(data):
+    # Only broadcast once, stop propagation otherwise
     global received_broadcast_ids
     broadcast_id = data["broadcast_id"]
     if broadcast_id in received_broadcast_ids:
-        return
+        return True
     received_broadcast_ids.append(broadcast_id)
     if len(received_broadcast_ids) > 100:
         received_broadcast_ids.pop(0)
-    # validate new blockchain
-    new_blockchain = data["blockchain"]
-    verified_blockchain = MINER.blockchain_instance.import_blockchain(new_blockchain)
-    if verified_blockchain is None:
-        return
-    consensus_blockchain = MINER.blockchain_instance.get_consensus_blockchain([MINER.blockchain_instance.blockchain,verified_blockchain])
-    if consensus_blockchain == MINER.blockchain_instance.blockchain:
-        return
-    # restart mining with new chain
-    MINER.blockchain_instance.blockchain = consensus_blockchain
-    MINER.restart_mining()
-    broadcast_new_blockchain('broadcast_new_blockchain',{"blockchain":new_blockchain,"broadcast_id":broadcast_id})
+    return False
