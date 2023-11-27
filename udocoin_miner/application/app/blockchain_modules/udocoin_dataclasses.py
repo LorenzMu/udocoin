@@ -29,6 +29,7 @@ class Block:
     prev_hash: str
     index: int
     block_author_public_key: str=None
+    # block_author_signature: str=None
     block_value: float=None
 
 @dataclass

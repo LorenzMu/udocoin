@@ -1,9 +1,10 @@
 from app import app,server_comm
 from flask import request,redirect,abort
 import os,json
-
 from app.miner import MINER
 from app.blockchain_modules.consensus_tests import consensus_test
+from app.blockchain_modules.udocoin_dataclasses import SignedTransaction
+import dacite
 
 @app.route("/",methods=["GET"])
 def index():
@@ -60,10 +61,29 @@ def cons_test():
     consensus_test()
     return "Ran consesnsus test, check console for more information"
 
-@app.route("/miner/get_balance/<public_key>")
-def get_balance(public_key):
-    if public_key == "all":
-        return MINER.blockchain_instance.balances
-    if public_key not in MINER.blockchain_instance.balances.keys():
-        return abort(404)
-    return {"key":public_key,"balance": MINER.blockchain_instance.balances[public_key]}
+
+@app.route("/miner/post_transaction",methods=["POST"])
+def post_transaction():
+    post_request = request.get_json()
+    signed_trans = dacite.from_dict(data_class=SignedTransaction, data={k: v for k, v in post_request.items() if v is not None})
+
+    return_message = MINER.receive_transaction_request(signed_trans)
+    return return_message
+
+@app.route("/miner/get_balance/all")
+def get_balance_all():
+    return str(MINER.blockchain_instance.balances)
+
+@app.route("/miner/get_balance")
+def get_balance():
+    public_key = request.args.get("pubkey")
+    if public_key == None:
+        return redirect("/miner/get_balance/all")
+    public_key = public_key.replace("_","\n")
+    balance = MINER.blockchain_instance.balances.get(public_key)
+    return str(balance) if balance is not None else "0"
+
+@app.route("/miner/mempool")
+def get_mempool():
+    return MINER.mempool
+
