@@ -69,11 +69,18 @@ def post_transaction():
     return_message = MINER.receive_transaction_request(signed_trans)
     return return_message
 
-@app.route("/miner/get_balance/<public_key>")
-def get_balance(public_key):
-    if public_key == "all":
-        return MINER.blockchain_instance.balances
-    return MINER.blockchain_instance.balances[public_key]
+@app.route("/miner/get_balance/all")
+def get_balance_all():
+    return str(MINER.blockchain_instance.balances)
+
+@app.route("/miner/get_balance")
+def get_balance():
+    public_key = request.args.get("pubkey")
+    if public_key == None:
+        return redirect("/miner/get_balance/all")
+    public_key = public_key.replace("_","\n")
+    balance = MINER.blockchain_instance.balances.get(public_key)
+    return str(balance) if balance is not None else "0"
 
 @app.route("/miner/mempool")
 def get_mempool():

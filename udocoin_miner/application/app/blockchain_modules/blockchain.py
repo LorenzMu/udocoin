@@ -18,8 +18,8 @@ class Blockchain:
         if self.get_consensus_blockchain(self.blockchain) == None:
             genesis_block = Block(data = BlockData(transaction_list=[]),
                                   proof_of_work= 1, prev_hash= "0", index = 0)
-            self.append_blockchain(genesis_block)       
-
+            self.append_blockchain(genesis_block)
+            
     def append_blockchain(self, block: Block) -> ReturnValues:
         self.blockchain.append(block)
         print("appending new block with prev_hash:", block.prev_hash)
@@ -50,8 +50,8 @@ class Blockchain:
             print("index: ",block_index)
             block = blockchain[block_index]
             # Check if the previous hash of the current block is the same as the hash of its previous block
-            print("Previous Block: " + str(previous_block))
-            print("This block:" + str(block))
+            # print("Previous Block: " + str(previous_block))
+            # print("This block:" + str(block))
             print("Previous Hash: " + str(self.hash(previous_block)))
             print("Previous Hash: " + str(block.prev_hash))
             a = block.prev_hash
