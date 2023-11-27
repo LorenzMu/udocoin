@@ -1,5 +1,5 @@
 from app import app,server_comm
-from flask import request,redirect
+from flask import request,redirect,abort
 import os,json
 from app.miner import MINER
 from app.blockchain_modules.consensus_tests import consensus_test
@@ -61,6 +61,7 @@ def cons_test():
     consensus_test()
     return "Ran consesnsus test, check console for more information"
 
+
 @app.route("/miner/post_transaction",methods=["POST"])
 def post_transaction():
     post_request = request.get_json()
@@ -85,3 +86,4 @@ def get_balance():
 @app.route("/miner/mempool")
 def get_mempool():
     return MINER.mempool
+

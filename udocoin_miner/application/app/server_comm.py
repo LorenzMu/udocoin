@@ -165,10 +165,10 @@ def set_socket_listeners(socket_client):
     @socket_client.on("connect_to_seed_response")
     def on_connect_to_seed_response_(args):
         return on_connect_to_seed_response(args)
-    @socketio.on('connect_to_seed')
+    @socket_client.on('connect_to_seed')
     def on_connect_to_seed_(args):
         return on_connect_to_seed(args)
-    @socketio.on('broadcast_new_blockchain')
+    @socket_client.on('broadcast_new_blockchain')
     def on_broadcast_new_blockchain_(data):
         return on_broadcast_new_blockchain(data)
     @socketio.on('broadcast_new_block')
