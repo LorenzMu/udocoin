@@ -8,11 +8,13 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.udocoin.udocoin_wallet.modules.BlockchainManager
 import com.udocoin.udocoin_wallet.modules.KeyManager
 
 class MainActivity : AppCompatActivity() {
     private val TAG = "[MAIN ACTIVITY]"
     lateinit var keyManager: KeyManager
+    lateinit var blockchainManager: BlockchainManager
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -21,6 +23,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         keyManager = KeyManager.getInstance()
+        blockchainManager = BlockchainManager.getInstance()
 
         /** go to login activity if there are no keys */
         if(!keyManager.hasValidKeys(this)){
@@ -34,6 +37,11 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.view_profile).setOnClickListener {
             val intent = Intent(this,ProfileActivity::class.java)
             startActivity(intent)
+        }
+        val balance = blockchainManager.getBalance(this)
+        findViewById<TextView>(R.id.balance_text).text = "Balance: $balance"
+        if(balance == "N/a"){
+            Toast.makeText(this,"Couldn't connect to any Server.",Toast.LENGTH_LONG).show()
         }
     }
 

@@ -29,12 +29,12 @@ class BlockchainManager {
             .toString()
     }
 
-    fun getBalance(context: Context):Float{
+    fun getBalance(context: Context):String{
         val keyManager = KeyManager.getInstance()
         val publicKey = keyManager.getPublicKey(context)
         return getPythonInstance(context)
             .getModule(blockchainConnectionModule)
             .callAttr("get_balance_by_public_key",publicKey)
-            .toFloat()
+            .toString()
     }
 }

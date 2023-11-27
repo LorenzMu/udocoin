@@ -24,6 +24,7 @@ android {
             pip{
                 install "matplotlib"
                 install "cryptography"
+                install "requests"
             }
         }
         
