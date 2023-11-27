@@ -62,7 +62,39 @@ def verify_transaction(signed_transaction: SignedTransaction) -> TransactionData
         return TransactionData(**loads(signed_transaction.message))
         
     except InvalidSignature:
-        return "Message signature could not be verified!"
+        return None  #"Message signature could not be verified!"
+
+# def sign_block():
+#     priv_key = get_priv_key()
+#     signed_transaction_data = priv_key.sign(
+#         "VALID SIGNATURE",
+#         padding.PSS(
+#             mgf=padding.MGF1(hashes.SHA256()),
+#             salt_length=padding.PSS.MAX_LENGTH
+#         ),
+#         hashes.SHA256()
+#         )
+
+# def verify_block_author_signature(block: Block):
+#     signature = block.block_author_signature
+#     pub_key_obj = load_pem_public_key(block.block_author_public_key, default_backend())
+
+#     try:
+#         pub_key_obj.verify(
+#             block.block_author_signature,
+#             "VALID SIGNATURE",
+#             padding.PSS(
+#                 mgf=padding.MGF1(hashes.SHA256()),
+#                 salt_length=padding.PSS.MAX_LENGTH
+#             ),
+#             hashes.SHA256()
+#         )
+#         return True
+        
+#     except InvalidSignature:
+#         return None  #"Message signature could not be verified!"
+
+
 
 def get_priv_key():
     key_str = os.environ["PRIVKEY"]
