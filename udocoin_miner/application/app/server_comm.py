@@ -232,12 +232,13 @@ def on_broadcast_new_block(data):
         block = MINER.blockchain_instance.import_blockchain("[" + new_block + "]")
         if block is None:
             return
-        return_value = MINER.blockchain_instance.detect_blockchain_append(block)
+        if block.index > MINER.blockchain_instance.blockchain[-1].index:
+            return_value = MINER.blockchain_instance.detect_blockchain_append(block)
 
-        #Ask the peer that broadcasted the block for their previous five blocks
-        if return_value == ReturnValues.SingleBlockRejected:
-            #TODO: How do I get this SPECIFIC peer's blockchain?
-            return "????"
+            #Ask the peer that broadcasted the block for their previous five blocks
+            if return_value == ReturnValues.SingleBlockRejected:
+                #TODO: How do I get this SPECIFIC peer's blockchain?
+                return "????"
         
 #If a new block's hash does not line up with the previous block's hash, get the peer's last five blocks and check for changes within
 @socketio.on('return_unconfirmed_blocks')
