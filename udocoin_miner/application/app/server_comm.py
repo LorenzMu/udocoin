@@ -233,7 +233,7 @@ def on_broadcast_new_block(data):
         block = MINER.blockchain_instance.import_blockchain("[" + new_block + "]")
         if block is None:
             return
-        if block.index > MINER.blockchain_instance.blockchain[-1].index:
+        if block[0].index > MINER.blockchain_instance.blockchain[-1].index:
             return_value = MINER.blockchain_instance.detect_blockchain_append(block)
             if return_value == ReturnValues.SingleBlockAppended:
                 MINER.update_mempool(depth_to_purge=1)
