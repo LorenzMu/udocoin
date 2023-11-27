@@ -6,7 +6,7 @@ import dataclasses
 from base64 import b64encode, b64decode
 import dacite
 from copy import deepcopy
-from ReturnValues import ReturnValues
+from app.blockchain_modules.ReturnValues import ReturnValues
 
 class Blockchain:
     def __init__(self):
@@ -130,7 +130,7 @@ class Blockchain:
                         raise Exception("Origin Address not found. Block rejected!")
                 self.index_confirmed+=1
 
-        self.balances = new_balances
+                self.balances = new_balances
 
     def export_blockchain(self, unconfirmed_blocks = False, single_block = False):
         if self.validate_blockchain(self.blockchain):
