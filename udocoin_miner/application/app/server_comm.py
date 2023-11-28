@@ -144,7 +144,10 @@ def return_unconfirmed_blocks():
 
 def broadcast_transaction_request(transaction: str="", transaction_data = {}):
     if transaction != "":
-        bf,bd = "broadcast_transaction_request", {"transaction": transaction, "broadcast_id": time.time()}
+        bid = time.time()
+        bf,bd = "broadcast_transaction_request", {"transaction": transaction, "broadcast_id": bid}
+        global received_broadcast_ids
+        received_broadcast_ids.append(bid)
     else:
         bf,bd = "broadcast_transaction_request", transaction_data
     print("Broadcasting transaction request")
@@ -173,15 +176,15 @@ def set_socket_listeners(socket_client):
     @socket_client.on('broadcast_new_blockchain')
     def on_broadcast_new_blockchain_(data):
         return on_broadcast_new_blockchain(data)
-    @socketio.on('broadcast_new_block')
+    @socket_client.on('broadcast_new_block')
     def on_broadcast_new_block_(data):
         return on_broadcast_new_block(data)
-    @socketio.on('return_unconfirmed_blocks')
-    def on_return_unconfirmed_blocks_():
-        return on_return_unconfirmed_blocks()
-    @socketio.on('broadcast_transaction_request')
-    def on_broadcast_transaction_request_():
-        return on_broadcast_transaction_request()
+    @socket_client.on('return_unconfirmed_blocks')
+    def on_return_unconfirmed_blocks_(data):
+        return on_return_unconfirmed_blocks(data)
+    @socket_client.on('broadcast_transaction_request')
+    def on_broadcast_transaction_request_(data):
+        return on_broadcast_transaction_request(data)
 
 # Receive events from connections set up by clients
 @socketio.on('broadcast_data')
@@ -262,8 +265,9 @@ def on_return_unconfirmed_blocks(data):
 
 @socketio.on('broadcast_transaction_request')
 def on_broadcast_transaction_request(data):
+    print("******** Transaction received")
     if not message_previously_received(data):
-        print("******** Transaction receivede")
+        print("Transaction received ******** ")
         transaction_dict = json.loads(data["transaction"])
 
         transaction_dict["origin_public_key"] = transaction_dict["origin_public_key"].encode('utf-8')
