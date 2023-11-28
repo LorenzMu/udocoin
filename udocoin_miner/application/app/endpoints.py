@@ -5,6 +5,7 @@ from app.miner import MINER
 from app.blockchain_modules.consensus_tests import consensus_test
 from app.blockchain_modules.udocoin_dataclasses import SignedTransaction
 import dacite
+from base64 import b64encode, b64decode
 
 @app.route("/",methods=["GET"])
 def index():
@@ -65,6 +66,13 @@ def cons_test():
 @app.route("/miner/post_transaction",methods=["POST"])
 def post_transaction():
     post_request = request.get_json()
+
+    post_request["origin_public_key"] = post_request["origin_public_key"].encode('utf-8')
+    #signed_transaction.signature = signed_transaction.signature.decode("utf-8")
+    post_request["signature"] = b64decode(post_request["signature"])#.encode('utf-8')
+    post_request["message"] = post_request["message"].encode('utf-8')
+
+
     signed_trans = dacite.from_dict(data_class=SignedTransaction, data={k: v for k, v in post_request.items() if v is not None})
 
     return_message = MINER.receive_transaction_request(signed_trans)

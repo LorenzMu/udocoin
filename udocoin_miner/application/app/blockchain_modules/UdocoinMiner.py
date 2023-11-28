@@ -96,7 +96,7 @@ class UdocoinMiner:
         return self.new_proof
 
     #verifies the transaction's signature and naively check that the user's account balance is high enough to complete it
-    def validate_transaction(signed_transaction: SignedTransaction, balances: List[AccountBalance]) -> bool:
+    def validate_transaction(self, signed_transaction: SignedTransaction, balances: List[AccountBalance]) -> bool:
         transaction_data = verify_transaction(signed_transaction)
         if transaction_data != None:
             if balances[signed_transaction.origin_public_key] >= transaction_data.amount and transaction_data.amount > 0:
