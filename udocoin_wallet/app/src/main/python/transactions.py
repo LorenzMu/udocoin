@@ -1,6 +1,7 @@
 import dataclasses 
 import datetime
 import json
+import base64
 from cryptography.hazmat import primitives,backends
 from cryptography.hazmat.primitives import asymmetric,serialization
 from cryptography.exceptions import InvalidSignature
@@ -72,7 +73,17 @@ def create_transaction(private_key:str,public_key:str,destination_public_key:str
         transaction_data=transaction
     )
     verify_transaction(signed_transaction)
-    signed_transaction_dict = dataclasses.asdict(signed_transaction)
-    print(str(signed_transaction_dict))
-    print(type(signed_transaction_dict))
-    return signed_transaction_dict
+    return export_signed_transaction(signed_transaction)
+
+
+def export_signed_transaction(signed_transaction:SignedTransaction)->str:
+    signed_transaction.origin_public_key = signed_transaction.origin_public_key.decode("utf-8")
+    signed_transaction.signature = base64.b64encode(signed_transaction.signature).decode('utf-8')
+    signed_transaction.message = signed_transaction.message.decode("utf-8")
+    return json.dumps(signed_transaction,cls=EnhancedJSONEncoder) 
+
+class EnhancedJSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if dataclasses.is_dataclass(o):
+            return dataclasses.asdict(o)
+        return super().default(o)

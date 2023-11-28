@@ -57,7 +57,13 @@ class TransactionActivity : AppCompatActivity() {
             destinationPublicKey,
             amount
         )
-        Toast.makeText(this,transaction.toString(),Toast.LENGTH_SHORT).show()
-        Log.d(TAG,transaction.toString())
+        Toast.makeText(this,transaction,Toast.LENGTH_SHORT).show()
+        Log.d(TAG,transaction)
+        val successfull = blockchainManager.sendTransaction(this,transaction)
+        if(successfull){
+            Toast.makeText(this,"SUCCESS",Toast.LENGTH_SHORT).show()
+        }else{
+            Toast.makeText(this,"BUUUH",Toast.LENGTH_SHORT).show()
+        }
     }
 }
