@@ -154,12 +154,12 @@ class UdocoinMiner:
 
         #Check if account balance is high enough to make transaction
         for transaction_data in transaction_data_list:
-            if transaction_data.origin_public_key in transaction_data.keys() and (transaction_data.amount >= temp_balances[transaction_data.origin_public_key]):
-                temp_balances[transaction_data.origin_public_key]-= transaction_data.amount
-                if temp_balances[transaction_data.destination_public_key] in transaction_data.keys():
-                    temp_balances[transaction_data.destination_public_key] += transaction_data.amount
+            if transaction_data.origin_public_key.decode('utf-8') in temp_balances.keys() and (transaction_data.amount >= temp_balances[transaction_data.origin_public_key.decode('utf-8')]):
+                temp_balances[transaction_data.origin_public_key.decode('utf-8')]-= transaction_data.amount
+                if temp_balances[transaction_data.destination_public_key.decode('utf-8')] in temp_balances.keys():
+                    temp_balances[transaction_data.destination_public_key.decode('utf-8')] += transaction_data.amount
                 else:
-                    temp_balances[transaction_data.destination_public_key] = transaction_data.amount
+                    temp_balances[transaction_data.destination_public_key.decode('utf-8')] = transaction_data.amount
                 publishable_transactions.append(transaction_data)
         
         publishable_signed_transactions = BlockData([s_t for s_t in self.mempool if (TransactionData(**loads(s_t.message)) in publishable_transactions)])
