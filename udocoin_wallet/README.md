@@ -1,0 +1,1 @@
+Settings -> Apps -> [Your App] -> Permissions
