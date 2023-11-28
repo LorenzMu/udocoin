@@ -5,7 +5,7 @@ import json
 def seed_is_active(ip:str)->bool:
     try:
         response = requests.get(f"{ip}/get/is_active")
-        print(f"Response from {ip}",response)
+        # print(f"Response from {ip}",response)
         return response.status_code == 200
     except:
         return False
@@ -16,7 +16,7 @@ def get_known_seeds():
     for seed in seeds:
         if seed_is_active(seed):
             active_seeds.append(seed)
-    print("Found as active seeds: ",active_seeds)
+    print("Found as active seeds: " + str(active_seeds))
     return active_seeds
 
 def post_transaction(transaction:str)->str:
@@ -43,9 +43,15 @@ def get_balance_by_public_key(public_key:str)->float:
     return "N/a"
 
 def send_transaction(signed_transaction:str):
+    print("Sending transaction... ")
     active_seeds = get_known_seeds()
+    transaction = json.loads(signed_transaction)
+    print("transaction:", str(transaction))
     for seed in active_seeds:
-        response = requests.post(f"{seed}/miner/post_transaction",data=signed_transaction)
+        response = requests.post(f"{seed}/miner/post_transaction",json=transaction)
+        print(str(response))
+        print(str(response.status_code))
+        print(str(response.text))
         if response.status_code == 200 or response.status_code == 201:
             return True
     return False
