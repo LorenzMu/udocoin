@@ -104,12 +104,15 @@ def get_private_key_from_file_string()->str:
     with open(path,"r") as file:
         return file.read()
     
-def write_binary_file(path:str,content:bytes):
+def write_binary_file(base_path:str,path:str,content:bytes):
+    if not os.path.exists(base_path):
+        os.makedirs(base_path)
     with open(path,"wb") as binary_file:
         binary_file.write(content)
     
 def safe_public_key_to_file(public_key:bytes):
     write_binary_file(
+        base_path=get_base_path(),
         path=get_public_key_path(),
         content=public_key)
 
@@ -119,6 +122,7 @@ def safe_public_key_to_file_string(public_key:str):
 
 def safe_private_key_to_file(private_key:bytes):
     write_binary_file(
+        base_path=get_base_path(),
         path=get_private_key_path(),
         content=private_key)
 

@@ -110,7 +110,6 @@ class UdocoinMiner:
             if signed_transaction not in self.mempool:
                 self.mempool.append(SignedTransaction)
                 
-                #TODO: !&!&!&!&!&!&!&!&!& Broadcast transactions to other peers here if os.environ["IS_SEED_SERVER"] == "True" !&!&!&!&!&!&!&!&!&!&!&!&!
                 if os.environ["IS_SEED_SERVER"]:
                     server_comm.broadcast_transaction_request(json.dumps(signed_transaction,cls=EnhancedJSONEncoder))
                 return "Received transaction and added it to mempool. Your transaction will be processed once 5 more blocks have been published"

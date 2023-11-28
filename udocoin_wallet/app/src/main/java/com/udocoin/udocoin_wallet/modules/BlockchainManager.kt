@@ -37,4 +37,11 @@ class BlockchainManager {
             .callAttr("get_balance_by_public_key",publicKey)
             .toString()
     }
+
+    fun sendTransaction(context: Context,transaction: String): Boolean{
+        return getPythonInstance(context)
+            .getModule(blockchainConnectionModule)
+            .callAttr("send_transaction",transaction)
+            .toBoolean()
+    }
 }
