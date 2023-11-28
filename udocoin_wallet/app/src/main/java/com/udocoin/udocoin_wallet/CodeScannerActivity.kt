@@ -1,9 +1,16 @@
 package com.udocoin.udocoin_wallet
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
+import android.view.View
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.budiyev.android.codescanner.AutoFocusMode
 import com.budiyev.android.codescanner.CodeScanner
 import com.budiyev.android.codescanner.CodeScannerView
@@ -71,4 +78,53 @@ class CodeScannerActivity : AppCompatActivity() {
         codeScanner.releaseResources()
         super.onPause()
     }
+
+    fun onClickRequestPermission(view: View) {
+        when {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                layout.showSnackbar(
+                    view,
+                    "Permission granted",
+                    Snackbar.LENGTH_INDEFINITE,
+                    null
+                ) {}
+            }
+
+            ActivityCompat.shouldShowRequestPermissionRationale(
+                this,
+                Manifest.permission.CAMERA
+            ) -> {
+                layout.showSnackbar(
+                    view,
+                    "Permission required",
+                    Snackbar.LENGTH_INDEFINITE,
+                    "OK"
+                ) {
+                    requestPermissionLauncher.launch(
+                        Manifest.permission.CAMERA
+                    )
+                }
+            }
+
+            else -> {
+                requestPermissionLauncher.launch(
+                    Manifest.permission.CAMERA
+                )
+            }
+        }
+    }
+
+    private val requestPermissionLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted: Boolean ->
+            if (isGranted) {
+                Log.i("Permission: ", "Granted")
+            } else {
+                Log.i("Permission: ", "Denied")
+            }
+        }
 }
