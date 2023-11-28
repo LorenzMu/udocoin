@@ -108,7 +108,13 @@ class UdocoinMiner:
     def receive_transaction_request(self, signed_transaction: SignedTransaction) -> str:
         if self.validate_transaction(signed_transaction= signed_transaction, balances= self.blockchain_instance.balances): 
             if signed_transaction not in self.mempool:
-                self.mempool.append(SignedTransaction)
+                self.mempool.append(signed_transaction)
+                
+                #Re-encode to broadcast in JSON format
+                signed_transaction.origin_public_key = signed_transaction.origin_public_key.decode("utf-8")
+                signed_transaction.signature = b64encode(signed_transaction.signature).decode('utf-8')
+                signed_transaction.message = signed_transaction.message.decode("utf-8")
+
                 
                 if os.environ["IS_SEED_SERVER"]:
                     server_comm.broadcast_transaction_request(json.dumps(signed_transaction,cls=EnhancedJSONEncoder))

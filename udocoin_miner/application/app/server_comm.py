@@ -10,6 +10,7 @@ from app.blockchain_modules.ReturnValues import ReturnValues
 from app.blockchain_modules.udocoin_dataclasses import SignedTransaction
 from app.blockchain_modules.transactions import verify_transaction
 import dacite
+from base64 import b64encode, b64decode
 
 from app.miner import MINER
 
@@ -263,7 +264,15 @@ def on_return_unconfirmed_blocks(data):
 def on_broadcast_transaction_request(data):
     if not message_previously_received(data):
         transaction_dict = json.loads(data["transaction"])
-        transaction = dacite.from_dict(data_class=SignedTransaction, data={k: v for k, v in transaction_dict.items() if v is not None})
+
+        transaction_dict["origin_public_key"] = transaction_dict["origin_public_key"].encode('utf-8')
+        # #signed_transaction.signature = signed_transaction.signature.decode("utf-8")
+        transaction_dict["signature"] = b64decode(transaction_dict["signature"])#.encode('utf-8')
+        transaction_dict["message"] = transaction_dict["message"].encode('utf-8')
+
+        transaction = SignedTransaction(transaction_dict["origin_public_key"],transaction_dict["signature"],transaction_dict["message"])
+
+        #transaction = dacite.from_dict(data_class=SignedTransaction, data={k: v for k, v in transaction_dict.items() if v is not None})
         transaction_data = verify_transaction(transaction)
         #Only allow spending values greater than 0
         if transaction_data.amount > 0:
