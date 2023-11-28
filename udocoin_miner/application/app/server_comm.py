@@ -263,8 +263,11 @@ def on_broadcast_transaction_request(data):
     if not message_previously_received(data):
         transaction_dict = json.loads(data["transaction"])
         transaction = dacite.from_dict(data_class=SignedTransaction, data={k: v for k, v in transaction_dict.items() if v is not None})
-        MINER.mempool.append(transaction)
-        broadcast_transaction_request(transaction_data=data)
+        transaction_data = verify_transaction(transaction)
+        #Only allow spending values greater than 0
+        if transaction_data.amount > 0:
+            MINER.mempool.append(transaction)
+            broadcast_transaction_request(transaction_data=data)
 
 
 def message_previously_received(data):
