@@ -93,5 +93,17 @@ def get_balance():
 
 @app.route("/miner/mempool")
 def get_mempool():
-    return MINER.mempool
+    if len(MINER.mempool) == 0:
+        return []
+    if type(MINER.mempool[0].origin_public_key) != bytes:
+        return MINER.mempool
+    decoded_transactionlist = []
+    for transaction in MINER.mempool:
+        signed_transaction = {}
+        signed_transaction["origin_public_key"] = transaction.origin_public_key.decode("utf-8")
+        #signed_transaction.signature = signed_transaction.signature.decode("utf-8")
+        signed_transaction["signature"] = b64encode(transaction.signature).decode('utf-8')
+        signed_transaction["message"] = transaction.message.decode("utf-8")
+        decoded_transactionlist.append(signed_transaction)
+    return decoded_transactionlist
 
