@@ -123,7 +123,7 @@ class UdocoinMiner:
     #Deletes Signed Transactions from the mempool if the transaction has been confirmed in a deep block or the transaction is too old.
     #depth_to_purge is the n-th to last Block in the blockchain
     #max_age is the maximum age transaction may have in the mempool in days
-    def update_mempool(self, depth_to_purge = 6, max_age_days = 1, max_age_hours = 0 ) -> None:
+    def update_mempool(self, depth_to_purge = 1, max_age_days = 1, max_age_hours = 0 ) -> None:
         cut_off_time = datetime.datetime.now() - datetime.timedelta(days = max_age_days, hours=max_age_hours)
 
         #Get transaction_list from block from which to filter
