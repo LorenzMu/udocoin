@@ -263,6 +263,7 @@ def on_return_unconfirmed_blocks(data):
 @socketio.on('broadcast_transaction_request')
 def on_broadcast_transaction_request(data):
     if not message_previously_received(data):
+        print("******** Transaction receivede")
         transaction_dict = json.loads(data["transaction"])
 
         transaction_dict["origin_public_key"] = transaction_dict["origin_public_key"].encode('utf-8')

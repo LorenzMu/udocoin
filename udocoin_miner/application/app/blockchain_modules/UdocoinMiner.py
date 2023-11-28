@@ -140,7 +140,8 @@ class UdocoinMiner:
             transactions_without_blocks = [s_t for s_t in self.mempool if s_t not in transaction_list]
             
             #Delete all transactions that are too old
-            self.mempool = [s_t for s_t in transactions_without_blocks if verify_transaction(s_t).timestamp > cut_off_time]
+            # self.mempool = [s_t for s_t in transactions_without_blocks if verify_transaction(s_t).timestamp > cut_off_time]
+            self.mempool = transactions_without_blocks
 
     #Collects transactions from the mempool that can be published in the next published block in one list    
     def get_valid_transactions(self) -> BlockData:
