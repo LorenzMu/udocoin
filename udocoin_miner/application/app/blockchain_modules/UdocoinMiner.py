@@ -99,7 +99,7 @@ class UdocoinMiner:
     def validate_transaction(self, signed_transaction: SignedTransaction, balances: List[AccountBalance]) -> bool:
         transaction_data = verify_transaction(signed_transaction)
         if transaction_data != None:
-            if balances[signed_transaction.origin_public_key] >= transaction_data.amount and transaction_data.amount > 0:
+            if balances[signed_transaction.origin_public_key.decode("utf-8")] >= transaction_data.amount and transaction_data.amount > 0:
                 return True
                 
         return False
