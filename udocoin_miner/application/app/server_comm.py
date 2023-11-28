@@ -8,6 +8,7 @@ import socketio as client_socketio
 import time
 from app.blockchain_modules.ReturnValues import ReturnValues
 from app.blockchain_modules.udocoin_dataclasses import SignedTransaction
+from app.blockchain_modules.transactions import verify_transaction
 import dacite
 
 from app.miner import MINER
