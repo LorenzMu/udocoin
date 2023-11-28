@@ -67,6 +67,8 @@ def cons_test():
 def post_transaction():
     post_request = request.get_json()
 
+
+    #Conversion to bytes!
     post_request["origin_public_key"] = post_request["origin_public_key"].encode('utf-8')
     # #signed_transaction.signature = signed_transaction.signature.decode("utf-8")
     post_request["signature"] = b64decode(post_request["signature"])#.encode('utf-8')

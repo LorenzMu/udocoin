@@ -108,12 +108,15 @@ class UdocoinMiner:
     def receive_transaction_request(self, signed_transaction: SignedTransaction) -> str:
         if self.validate_transaction(signed_transaction= signed_transaction, balances= self.blockchain_instance.balances): 
             if signed_transaction not in self.mempool:
-                self.mempool.append(signed_transaction)
                 
+                #binary mode! not serializable to json
+                self.mempool.append(signed_transaction)
                 #Re-encode to broadcast in JSON format
                 signed_transaction.origin_public_key = signed_transaction.origin_public_key.decode("utf-8")
                 signed_transaction.signature = b64encode(signed_transaction.signature).decode('utf-8')
                 signed_transaction.message = signed_transaction.message.decode("utf-8")
+                
+                
 
                 
                 if os.environ["IS_SEED_SERVER"]:
@@ -154,7 +157,7 @@ class UdocoinMiner:
 
         #Check if account balance is high enough to make transaction
         for transaction_data in transaction_data_list:
-            if transaction_data.origin_public_key.decode('utf-8') in temp_balances.keys() and (transaction_data.amount >= temp_balances[transaction_data.origin_public_key.decode('utf-8')]):
+            if transaction_data.origin_public_key.decode('utf-8') in temp_balances.keys() and (transaction_data.amount <= temp_balances[transaction_data.origin_public_key.decode('utf-8')]):
                 temp_balances[transaction_data.origin_public_key.decode('utf-8')]-= transaction_data.amount
                 if temp_balances[transaction_data.destination_public_key.decode('utf-8')] in temp_balances.keys():
                     temp_balances[transaction_data.destination_public_key.decode('utf-8')] += transaction_data.amount
