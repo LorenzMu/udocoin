@@ -106,7 +106,7 @@ class UdocoinMiner:
 
     #Occurs when a new transaction is broadcast to the peer
     def receive_transaction_request(self, signed_transaction: SignedTransaction) -> str:
-        if self.validate_transaction(signed_transaction, balances= self.blockchain_instance.balances): 
+        if self.validate_transaction(signed_transaction= signed_transaction, balances= self.blockchain_instance.balances): 
             if signed_transaction not in self.mempool:
                 self.mempool.append(SignedTransaction)
                 
