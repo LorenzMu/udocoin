@@ -67,10 +67,10 @@ def cons_test():
 def post_transaction():
     post_request = request.get_json()
 
-    post_request["origin_public_key"] = post_request["origin_public_key"].encode('utf-8')
-    #signed_transaction.signature = signed_transaction.signature.decode("utf-8")
-    post_request["signature"] = b64decode(post_request["signature"])#.encode('utf-8')
-    post_request["message"] = post_request["message"].encode('utf-8')
+    # post_request["origin_public_key"] = post_request["origin_public_key"].encode('utf-8')
+    # #signed_transaction.signature = signed_transaction.signature.decode("utf-8")
+    # post_request["signature"] = b64decode(post_request["signature"])#.encode('utf-8')
+    # post_request["message"] = post_request["message"].encode('utf-8')
 
 
     signed_trans = dacite.from_dict(data_class=SignedTransaction, data={k: v for k, v in post_request.items() if v is not None})
