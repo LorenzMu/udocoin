@@ -1,7 +1,7 @@
 import datetime
 import hashlib
 import json
-from app.blockchain_modules.udocoin_dataclasses import Block, BlockData, TransactionData, AccountBalance, SignedTransaction
+from app.blockchain_modules.udocoin_dataclasses import *
 import dataclasses
 from base64 import b64encode, b64decode
 import dacite
@@ -132,18 +132,21 @@ class Blockchain:
 
                 self.balances = new_balances
 
-    def export_blockchain(self, unconfirmed_blocks = False, single_block = False):
+    def export_blockchain(self, unconfirmed_blocks = False, single_block = False) -> str:
+        exported_blockchain = []
+
         if self.validate_blockchain(self.blockchain):
-            exported_blockchain = deepcopy(self.blockchain)
-            for block in exported_blockchain:
+            for block in self.blockchain:
+                serializable_block_data = []
                 for signed_transaction in block.data.transaction_list:
                     if signed_transaction is not None:
-                        signed_transaction.origin_public_key = signed_transaction.origin_public_key.decode("utf-8")
-                        #signed_transaction.signature = signed_transaction.signature.decode("utf-8")
-                        signed_transaction.signature = b64encode(signed_transaction.signature).decode('utf-8')
-                        signed_transaction.message = signed_transaction.message.decode("utf-8")
-                if block.block_author_public_key is not None:
-                    block.block_author_public_key = block.block_author_public_key#.decode("utf-8")
+                        serializable_block_data.append(serialize_signed_transaction(signed_transaction))
+                        
+                serializable_block_data = SerializableBlockData(serializable_block_data)
+                serializable_block = SerializableBlock(data=serializable_block_data, proof_of_work= block.proof_of_work,
+                                                        prev_hash=block.prev_hash,index=block.index,block_author_public_key= block.block_author_public_key,
+                                                        block_value=block.block_value)
+                exported_blockchain.append(serializable_block)
     
             # with open("blockchain_test_export","w") as file:
             #     file.write(json.dumps(exported_blockchain, cls=EnhancedJSONEncoder))
@@ -157,23 +160,28 @@ class Blockchain:
 
 
     
-    def import_blockchain(self, blockchain:str)->list:
-        loaded_blockchain = json.loads(blockchain)
-        imported_blockchain = []
-
-        for block in loaded_blockchain:
-            imported_blockchain.append(dacite.from_dict(data_class=Block, data={k: v for k, v in block.items() if v is not None}))
-
-        for block in imported_blockchain:
-                for signed_transaction in block.data.transaction_list:
-                    if signed_transaction is not None:
-                        signed_transaction.origin_public_key = signed_transaction.origin_public_key.encode('utf-8')
-                        #signed_transaction.signature = signed_transaction.signature.decode("utf-8")
-                        signed_transaction.signature = b64decode(signed_transaction.signature)#.encode('utf-8')
-                        signed_transaction.message = signed_transaction.message.encode('utf-8')
-                if block.block_author_public_key is not None:
-                    block.block_author_public_key = block.block_author_public_key
+    def import_blockchain(self, blockchain:str) -> list[Block]:
+        loaded_blockchain = json.loads(blockchain) #This is a list[SerializableBlock]
+        serializable_blockchain: list[SerializableBlock] = []
+        imported_blockchain: list[Block] = []
         
+
+        for serializable_block in loaded_blockchain:
+            serializable_blockchain.append(dacite.from_dict(data_class=SerializableBlock, data={k: v for k, v in serializable_block.items() if v is not None}))
+
+        for serializable_block in serializable_blockchain:
+            signed_transactions_in_block = []
+            for serializable_signed_transaction in serializable_block.data.transaction_list:
+                if serializable_signed_transaction is not None:
+                    signed_transaction = deserialize_signed_transaction(serializable_signed_transaction)
+                    signed_transactions_in_block.append(signed_transaction)
+            
+            block_data = BlockData(signed_transactions_in_block)
+            block = Block(data=block_data, proof_of_work= serializable_block.proof_of_work, prev_hash= serializable_block.prev_hash,
+                          index= serializable_block.index, block_author_public_key= serializable_block.block_author_public_key,
+                          block_value= serializable_block.block_value)
+            imported_blockchain.append(block)
+
         # with open("blockchain_test_import","w") as file:
         #     file.write(str(imported_blockchain))
 

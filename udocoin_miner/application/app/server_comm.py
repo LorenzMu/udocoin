@@ -7,7 +7,7 @@ import requests
 import socketio as client_socketio
 import time
 from app.blockchain_modules.ReturnValues import ReturnValues
-from app.blockchain_modules.udocoin_dataclasses import SignedTransaction
+from app.blockchain_modules.udocoin_dataclasses import SignedTransaction, SerializableSignedTransaction, serialize_signed_transaction, deserialize_signed_transaction
 from app.blockchain_modules.transactions import verify_transaction
 import dacite
 from base64 import b64encode, b64decode
@@ -270,19 +270,14 @@ def on_broadcast_transaction_request(data):
         print("Transaction received ******** ")
         transaction_dict = json.loads(data["transaction"])
 
-        transaction_dict["origin_public_key"] = transaction_dict["origin_public_key"].encode('utf-8')
-        # #signed_transaction.signature = signed_transaction.signature.decode("utf-8")
-        transaction_dict["signature"] = b64decode(transaction_dict["signature"])#.encode('utf-8')
-        transaction_dict["message"] = transaction_dict["message"].encode('utf-8')
+        serializable_signed_transaction = dacite.from_dict(data_class=SerializableSignedTransaction, data={k: v for k, v in transaction_dict.items() if v is not None})
+        signed_transaction = deserialize_signed_transaction(serializable_signed_transaction)
 
-        transaction = SignedTransaction(transaction_dict["origin_public_key"],transaction_dict["signature"],transaction_dict["message"])
-
-        #transaction = dacite.from_dict(data_class=SignedTransaction, data={k: v for k, v in transaction_dict.items() if v is not None})
-        transaction_data = verify_transaction(transaction)
+        transaction_data = verify_transaction(signed_transaction)
         #Only allow spending values greater than 0
         if transaction_data.amount > 0:
-            MINER.mempool.append(transaction)
-            broadcast_transaction_request(transaction_data=data)
+            MINER.mempool.append(signed_transaction)
+            broadcast_transaction_request(transaction="", transaction_data=data)
 
 
 def message_previously_received(data):
