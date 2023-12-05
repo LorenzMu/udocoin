@@ -78,7 +78,7 @@ def post_transaction():
 
 @app.route("/miner/get_balance/all")
 def get_balance_all():
-    return str(MINER.blockchain_instance.balances)
+    return str(MINER.blockchain_instance.balances) + "\n\n INDEX CONFIRMED: " + str(MINER.blockchain_instance.index_confirmed)
 
 @app.route("/miner/get_balance")
 def get_balance():
@@ -87,7 +87,7 @@ def get_balance():
         return redirect("/miner/get_balance/all")
     public_key = public_key.replace("_","\n")
     balance = MINER.blockchain_instance.balances.get(public_key)
-    return str(balance) if balance is not None else "0"
+    return (str(balance) if balance is not None else "0") + "\n\n INDEX CONFIRMED: " + str(MINER.blockchain_instance.index_confirmed)
 
 @app.route("/miner/mempool")
 def get_mempool():

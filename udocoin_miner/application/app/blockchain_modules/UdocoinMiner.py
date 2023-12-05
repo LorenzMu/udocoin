@@ -1,3 +1,4 @@
+from copy import deepcopy
 from app.blockchain_modules.blockchain import Blockchain
 from app.blockchain_modules.udocoin_dataclasses import *
 from app.blockchain_modules.transactions import *
@@ -144,7 +145,7 @@ class UdocoinMiner:
     #Collects transactions from the mempool that can be published in the next published block in one list    
     def get_valid_transactions(self) -> BlockData:
         publishable_transactions = []
-        temp_balances = self.blockchain_instance.balances
+        temp_balances = deepcopy(self.blockchain_instance.balances)
 
         transaction_data_list = [verify_transaction(s_t) for s_t in self.mempool]
         print("T_DATA_LIST", transaction_data_list)

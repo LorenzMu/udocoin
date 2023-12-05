@@ -13,7 +13,7 @@ class Blockchain:
         #If no blockchain is found in the network, create your own blockchain 
         self.blockchain: list[Block] = []
         self.balances: dict[str, float] = {}
-        self.index_confirmed = 0
+        self.index_confirmed = -1
 
         if self.get_consensus_blockchain(self.blockchain) == None:
             genesis_block = Block(data = BlockData(transaction_list=[]),
@@ -52,8 +52,8 @@ class Blockchain:
             # Check if the previous hash of the current block is the same as the hash of its previous block
             # print("Previous Block: " + str(previous_block))
             # print("This block:" + str(block))
-            print("Previous Hash: " + str(self.hash(previous_block)))
-            print("Previous Hash: " + str(block.prev_hash))
+            #####print("Previous Hash: " + str(self.hash(previous_block)))
+            #####print("Previous Hash: " + str(block.prev_hash))
             a = block.prev_hash
             b = self.hash(previous_block)
             if block.prev_hash != self.hash(previous_block) and previous_block != blockchain[0]:
@@ -96,10 +96,13 @@ class Blockchain:
     #Account balance is valid once blocks are 5 blocks deep in the blockchain
     #At this point we must check how many blocks changed when the blockchain updated
     def update_balances(self):
-         #If there are more than 5 blocks, the blockchain is long enough to start updating balances 
-        if len(self.blockchain) > 5:
+         #If there are 5 or more blocks, the blockchain is long enough to start updating balances 
+        if len(self.blockchain) >= 5:
             #Update balances for each newly confirmable block
             while self.index_confirmed < len(self.blockchain)-5:
+                self.index_confirmed+=1
+                print("CONFIRMING INDEX: ", self.index_confirmed)
+                print(self.balances)
                 new_balances = self.balances
 
                 block = self.blockchain[self.index_confirmed]
@@ -128,7 +131,8 @@ class Blockchain:
                     else:
                         self.blockchain.pop()
                         raise Exception("Origin Address not found. Block rejected!")
-                self.index_confirmed+=1
+                print("CONFIRMED BLOCK", self.index_confirmed)
+                
 
                 self.balances = new_balances
 
@@ -151,7 +155,7 @@ class Blockchain:
             # with open("blockchain_test_export","w") as file:
             #     file.write(json.dumps(exported_blockchain, cls=EnhancedJSONEncoder))
             if unconfirmed_blocks:
-                return json.dumps(exported_blockchain[-5:], cls=EnhancedJSONEncoder)
+                return json.dumps(exported_blockchain[-4:], cls=EnhancedJSONEncoder)
             if single_block:
                 return json.dumps(exported_blockchain[-1], cls=EnhancedJSONEncoder)
             return json.dumps(exported_blockchain, cls=EnhancedJSONEncoder)
