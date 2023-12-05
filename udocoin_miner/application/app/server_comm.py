@@ -94,7 +94,7 @@ def get_latest_blockchain():
     consensus_blockchain = MINER.blockchain_instance.get_consensus_blockchain(blockchains)
     if consensus_blockchain != MINER.blockchain_instance.blockchain:
         MINER.blockchain_instance.blockchain = consensus_blockchain
-        MINER.blockchain_instance.index_confirmed = 0
+        MINER.blockchain_instance.index_confirmed = -1
         MINER.blockchain_instance.balances = {}
         MINER.blockchain_instance.update_balances()
         MINER.restart_mining()
