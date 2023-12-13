@@ -31,6 +31,7 @@ class Blockchain:
                 return ReturnValues.SingleBlockRejected
             
             self.update_balances()
+            
             return ReturnValues.SingleBlockAppended
     
     #Do some arbitrary math to "work" the system
@@ -57,7 +58,7 @@ class Blockchain:
             a = block.prev_hash
             b = self.hash(previous_block)
             if block.prev_hash != self.hash(previous_block) and previous_block != blockchain[0]:
-                raise Exception("Wrong previous hash detected, block rejected!")
+                #raise Exception("Wrong previous hash detected, block rejected!")
                 return False
 
             previous_proof = previous_block.proof_of_work
@@ -73,11 +74,11 @@ class Blockchain:
 
             if hash_operation[:5] != "00000" and index > 1:
                 print(hash_operation)
-                raise Exception("Invalid proof of work detected, block rejected!")
+                #raise Exception("Invalid proof of work detected, block rejected!")
                 return False
 
             if block.block_value  != self.get_block_value(index):
-                raise Exception("Wrong block value detected, block rejected!")
+                #raise Exception("Wrong block value detected, block rejected!")
                 return False
 
             previous_block = block
