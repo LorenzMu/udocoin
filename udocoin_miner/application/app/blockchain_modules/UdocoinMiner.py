@@ -35,7 +35,7 @@ class UdocoinMiner:
             if new_block is None:
                 self.mining = False
             print("Found new Block!!!")
-            # TODO handle new_block
+            
             exported_block = self.blockchain_instance.export_blockchain(single_block=True)
             # broadcast blockchain instance
             server_comm.broadcast_new_block(exported_block)

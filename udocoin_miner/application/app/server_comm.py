@@ -134,13 +134,6 @@ def broadcast_new_block(exported_block: str = "", block_data = {}):
     for socket_client in socket_clients:
         socket_client.emit(bf,bd) # connections which the current server has started
 
-def return_unconfirmed_blocks():
-    exported_blocks = MINER.blockchain_instance.export_blockchain(unconfirmed_blocks=True)
-    bf,bd = "return_unconfirmed_blocks",{"block": exported_blocks, "broadcast_id": time.time()}
-    print("Broadcasting multiple Blocks :)")
-    socketio.emit(bf,bd) # connections set up by clients
-    for socket_client in socket_clients:
-        socket_client.emit(bf,bd) # connections which the current server has started
 
 def broadcast_transaction_request(transaction: str="", transaction_data = {}):
     if transaction != "":
@@ -185,6 +178,9 @@ def set_socket_listeners(socket_client):
     @socket_client.on('broadcast_transaction_request')
     def on_broadcast_transaction_request_(data):
         return on_broadcast_transaction_request(data)
+    @socketio.on('request_unconfirmed_blocks')
+    def on_request_unconfirmed_blocks_():
+        return on_request_unconfirmed_blocks()
 
 # Receive events from connections set up by clients
 @socketio.on('broadcast_data')
@@ -245,8 +241,13 @@ def on_broadcast_new_block(data):
 
             #Ask the peer that broadcasted the block for their previous five blocks
             if return_value == ReturnValues.SingleBlockRejected:
+                ##################################################
                 #TODO: How do I get this SPECIFIC peer's blockchain?
-                return "????"
+                socketio.emit('request_unconfirmed_blocks',{})
+                for socket_client in socket_clients:
+                    socket_client.emit('request_unconfirmed_blocks',{})
+                return
+                ##################################################
         
 #If a new block's hash does not line up with the previous block's hash, get the peer's last five blocks and check for changes within
 @socketio.on('return_unconfirmed_blocks')
@@ -278,6 +279,15 @@ def on_broadcast_transaction_request(data):
         if transaction_data.amount > 0:
             MINER.mempool.append(signed_transaction)
             broadcast_transaction_request(transaction="", transaction_data=data)
+
+@socketio.on('request_unconfirmed_blocks')
+def on_request_unconfirmed_blocks():
+    exported_blocks = MINER.blockchain_instance.export_blockchain(unconfirmed_blocks=True)
+    bf,bd = "return_unconfirmed_blocks",{"block": exported_blocks, "broadcast_id": time.time()}
+    print("Broadcasting multiple Blocks :)")
+    socketio.emit(bf,bd) # connections set up by clients
+    for socket_client in socket_clients:
+        socket_client.emit(bf,bd) # connections which the current server has started
 
 
 def message_previously_received(data):
