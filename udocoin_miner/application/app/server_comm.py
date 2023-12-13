@@ -237,6 +237,7 @@ def on_broadcast_new_block(data):
         if block[0].index > MINER.blockchain_instance.blockchain[-1].index:
             return_value = MINER.blockchain_instance.detect_blockchain_append(block[0])
             if return_value == ReturnValues.SingleBlockAppended:
+                MINER.restart_mining()
                 MINER.update_mempool(depth_to_purge=1)
 
             #Ask the peer that broadcasted the block for their previous five blocks
