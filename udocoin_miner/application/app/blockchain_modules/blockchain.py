@@ -1,7 +1,7 @@
 import datetime
 import hashlib
 import json
-from app.blockchain_modules.udocoin_dataclasses import Block, BlockData, TransactionData, AccountBalance, SignedTransaction
+from app.blockchain_modules.udocoin_dataclasses import *
 import dataclasses
 from base64 import b64encode, b64decode
 import dacite
@@ -13,7 +13,7 @@ class Blockchain:
         #If no blockchain is found in the network, create your own blockchain 
         self.blockchain: list[Block] = []
         self.balances: dict[str, float] = {}
-        self.index_confirmed = 0
+        self.index_confirmed = -1
 
         if self.get_consensus_blockchain(self.blockchain) == None:
             genesis_block = Block(data = BlockData(transaction_list=[]),
@@ -31,6 +31,7 @@ class Blockchain:
                 return ReturnValues.SingleBlockRejected
             
             self.update_balances()
+            
             return ReturnValues.SingleBlockAppended
     
     #Do some arbitrary math to "work" the system
@@ -52,12 +53,13 @@ class Blockchain:
             # Check if the previous hash of the current block is the same as the hash of its previous block
             # print("Previous Block: " + str(previous_block))
             # print("This block:" + str(block))
-            print("Previous Hash: " + str(self.hash(previous_block)))
-            print("Previous Hash: " + str(block.prev_hash))
+            #####print("Previous Hash: " + str(self.hash(previous_block)))
+            #####print("Previous Hash: " + str(block.prev_hash))
             a = block.prev_hash
             b = self.hash(previous_block)
             if block.prev_hash != self.hash(previous_block) and previous_block != blockchain[0]:
-                raise Exception("Wrong previous hash detected, block rejected!")
+                #raise Exception("Wrong previous hash detected, block rejected!")
+                print("Wrong previous hash detected, block rejected!")
                 return False
 
             previous_proof = previous_block.proof_of_work
@@ -73,11 +75,13 @@ class Blockchain:
 
             if hash_operation[:5] != "00000" and index > 1:
                 print(hash_operation)
-                raise Exception("Invalid proof of work detected, block rejected!")
+                #raise Exception("Invalid proof of work detected, block rejected!")
+                print("Invalid proof of work detected, block rejected!")
                 return False
 
             if block.block_value  != self.get_block_value(index):
-                raise Exception("Wrong block value detected, block rejected!")
+                #raise Exception("Wrong block value detected, block rejected!")
+                print("Wrong block value detected, block rejected!")
                 return False
 
             previous_block = block
@@ -96,10 +100,13 @@ class Blockchain:
     #Account balance is valid once blocks are 5 blocks deep in the blockchain
     #At this point we must check how many blocks changed when the blockchain updated
     def update_balances(self):
-         #If there are more than 5 blocks, the blockchain is long enough to start updating balances 
-        if len(self.blockchain) > 5:
+         #If there are 5 or more blocks, the blockchain is long enough to start updating balances 
+        if len(self.blockchain) >= 5:
             #Update balances for each newly confirmable block
             while self.index_confirmed < len(self.blockchain)-5:
+                self.index_confirmed+=1
+                print("CONFIRMING INDEX: ", self.index_confirmed)
+                print(self.balances)
                 new_balances = self.balances
 
                 block = self.blockchain[self.index_confirmed]
@@ -124,56 +131,71 @@ class Blockchain:
                                 new_balances[message.destination_public_key] = message.amount
                         else:
                             self.blockchain.pop()
-                            raise Exception("Account Balance of Origin Address too low! Block rejected!")
+                            #raise Exception("Account Balance of Origin Address too low! Block rejected!")
+                            print("Account Balance of Origin Address too low! Block rejected!")
+                            return False
                     else:
                         self.blockchain.pop()
-                        raise Exception("Origin Address not found. Block rejected!")
-                self.index_confirmed+=1
+                        #raise Exception("Origin Address not found. Block rejected!")
+                        print("Origin Address not found. Block rejected!")
+                        return False
+                print("CONFIRMED BLOCK", self.index_confirmed)
+                
 
                 self.balances = new_balances
 
-    def export_blockchain(self, unconfirmed_blocks = False, single_block = False):
+    def export_blockchain(self, unconfirmed_blocks = False, single_block = False) -> str:
+        exported_blockchain = []
+
         if self.validate_blockchain(self.blockchain):
-            exported_blockchain = deepcopy(self.blockchain)
-            for block in exported_blockchain:
+            for block in self.blockchain:
+                serializable_block_data = []
                 for signed_transaction in block.data.transaction_list:
                     if signed_transaction is not None:
-                        signed_transaction.origin_public_key = signed_transaction.origin_public_key.decode("utf-8")
-                        #signed_transaction.signature = signed_transaction.signature.decode("utf-8")
-                        signed_transaction.signature = b64encode(signed_transaction.signature).decode('utf-8')
-                        signed_transaction.message = signed_transaction.message.decode("utf-8")
-                if block.block_author_public_key is not None:
-                    block.block_author_public_key = block.block_author_public_key#.decode("utf-8")
+                        serializable_block_data.append(serialize_signed_transaction(signed_transaction))
+                        
+                serializable_block_data = SerializableBlockData(serializable_block_data)
+                serializable_block = SerializableBlock(data=serializable_block_data, proof_of_work= block.proof_of_work,
+                                                        prev_hash=block.prev_hash,index=block.index,block_author_public_key= block.block_author_public_key,
+                                                        block_value=block.block_value)
+                exported_blockchain.append(serializable_block)
     
             # with open("blockchain_test_export","w") as file:
             #     file.write(json.dumps(exported_blockchain, cls=EnhancedJSONEncoder))
             if unconfirmed_blocks:
-                return json.dumps(exported_blockchain[-5:], cls=EnhancedJSONEncoder)
+                return json.dumps(exported_blockchain[-4:], cls=EnhancedJSONEncoder)
             if single_block:
                 return json.dumps(exported_blockchain[-1], cls=EnhancedJSONEncoder)
             return json.dumps(exported_blockchain, cls=EnhancedJSONEncoder)
         else:
-            raise Exception("Export failed due to invalid blockchain!")
+            #raise Exception("Export failed due to invalid blockchain!")
+            print("Export failed due to invalid blockchain!")
+            return False
 
 
     
-    def import_blockchain(self, blockchain:str)->list:
-        loaded_blockchain = json.loads(blockchain)
-        imported_blockchain = []
-
-        for block in loaded_blockchain:
-            imported_blockchain.append(dacite.from_dict(data_class=Block, data={k: v for k, v in block.items() if v is not None}))
-
-        for block in imported_blockchain:
-                for signed_transaction in block.data.transaction_list:
-                    if signed_transaction is not None:
-                        signed_transaction.origin_public_key = signed_transaction.origin_public_key.encode('utf-8')
-                        #signed_transaction.signature = signed_transaction.signature.decode("utf-8")
-                        signed_transaction.signature = b64decode(signed_transaction.signature)#.encode('utf-8')
-                        signed_transaction.message = signed_transaction.message.encode('utf-8')
-                if block.block_author_public_key is not None:
-                    block.block_author_public_key = block.block_author_public_key
+    def import_blockchain(self, blockchain:str) -> list[Block]:
+        loaded_blockchain = json.loads(blockchain) #This is a list[SerializableBlock]
+        serializable_blockchain: list[SerializableBlock] = []
+        imported_blockchain: list[Block] = []
         
+
+        for serializable_block in loaded_blockchain:
+            serializable_blockchain.append(dacite.from_dict(data_class=SerializableBlock, data={k: v for k, v in serializable_block.items() if v is not None}))
+
+        for serializable_block in serializable_blockchain:
+            signed_transactions_in_block = []
+            for serializable_signed_transaction in serializable_block.data.transaction_list:
+                if serializable_signed_transaction is not None:
+                    signed_transaction = deserialize_signed_transaction(serializable_signed_transaction)
+                    signed_transactions_in_block.append(signed_transaction)
+            
+            block_data = BlockData(signed_transactions_in_block)
+            block = Block(data=block_data, proof_of_work= serializable_block.proof_of_work, prev_hash= serializable_block.prev_hash,
+                          index= serializable_block.index, block_author_public_key= serializable_block.block_author_public_key,
+                          block_value= serializable_block.block_value)
+            imported_blockchain.append(block)
+
         # with open("blockchain_test_import","w") as file:
         #     file.write(str(imported_blockchain))
 

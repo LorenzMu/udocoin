@@ -3,7 +3,7 @@ from flask import request,redirect,abort
 import os,json
 from app.miner import MINER
 from app.blockchain_modules.consensus_tests import consensus_test
-from app.blockchain_modules.udocoin_dataclasses import SignedTransaction
+from app.blockchain_modules.udocoin_dataclasses import SignedTransaction, SerializableSignedTransaction, serialize_signed_transaction, deserialize_signed_transaction
 import dacite
 from base64 import b64encode, b64decode
 
@@ -66,23 +66,19 @@ def cons_test():
 @app.route("/miner/post_transaction",methods=["POST"])
 def post_transaction():
     post_request = request.get_json()
-
-
-    #Conversion to bytes!
-    post_request["origin_public_key"] = post_request["origin_public_key"].encode('utf-8')
-    # #signed_transaction.signature = signed_transaction.signature.decode("utf-8")
-    post_request["signature"] = b64decode(post_request["signature"])#.encode('utf-8')
-    post_request["message"] = post_request["message"].encode('utf-8')
-
-    signed_trans = SignedTransaction(post_request["origin_public_key"], post_request["signature"], post_request["message"])
-    #signed_trans = dacite.from_dict(data_class=SignedTransaction, data={k: v for k, v in post_request.items() if v is not None})
-
-    return_message = MINER.receive_transaction_request(signed_trans)
-    return return_message
+    #print(post_request)
+    try:
+        serializable_signed_transaction = SerializableSignedTransaction(post_request["origin_public_key"],post_request["signature"], post_request["message"])
+        signed_transaction = deserialize_signed_transaction(serializable_signed_transaction)
+        return_message = MINER.receive_transaction_request(signed_transaction)
+        return return_message
+    
+    except KeyError as ke:
+        return f"Invalid Post Request: {str(ke)}"
 
 @app.route("/miner/get_balance/all")
 def get_balance_all():
-    return str(MINER.blockchain_instance.balances)
+    return str(MINER.blockchain_instance.balances) + "\n\n INDEX CONFIRMED: " + str(MINER.blockchain_instance.index_confirmed)
 
 @app.route("/miner/get_balance")
 def get_balance():
@@ -91,7 +87,7 @@ def get_balance():
         return redirect("/miner/get_balance/all")
     public_key = public_key.replace("_","\n")
     balance = MINER.blockchain_instance.balances.get(public_key)
-    return str(balance) if balance is not None else "0"
+    return (str(balance) if balance is not None else "0") + "\n\n INDEX CONFIRMED: " + str(MINER.blockchain_instance.index_confirmed)
 
 @app.route("/miner/mempool")
 def get_mempool():
@@ -99,13 +95,10 @@ def get_mempool():
         return []
     if type(MINER.mempool[0].origin_public_key) != bytes:
         return MINER.mempool
-    decoded_transactionlist = []
-    for transaction in MINER.mempool:
-        signed_transaction = {}
-        signed_transaction["origin_public_key"] = transaction.origin_public_key.decode("utf-8")
-        #signed_transaction.signature = signed_transaction.signature.decode("utf-8")
-        signed_transaction["signature"] = b64encode(transaction.signature).decode('utf-8')
-        signed_transaction["message"] = transaction.message.decode("utf-8")
-        decoded_transactionlist.append(signed_transaction)
-    return decoded_transactionlist
+    serializable_transaction_list = []
+    for signed_transaction in MINER.mempool:
+        serializable_signed_transaction = serialize_signed_transaction(signed_transaction)
+        serializable_transaction_list.append(serializable_signed_transaction)
+
+    return serializable_transaction_list
 

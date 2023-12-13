@@ -7,7 +7,7 @@ import requests
 import socketio as client_socketio
 import time
 from app.blockchain_modules.ReturnValues import ReturnValues
-from app.blockchain_modules.udocoin_dataclasses import SignedTransaction
+from app.blockchain_modules.udocoin_dataclasses import SignedTransaction, SerializableSignedTransaction, serialize_signed_transaction, deserialize_signed_transaction
 from app.blockchain_modules.transactions import verify_transaction
 import dacite
 from base64 import b64encode, b64decode
@@ -94,7 +94,7 @@ def get_latest_blockchain():
     consensus_blockchain = MINER.blockchain_instance.get_consensus_blockchain(blockchains)
     if consensus_blockchain != MINER.blockchain_instance.blockchain:
         MINER.blockchain_instance.blockchain = consensus_blockchain
-        MINER.blockchain_instance.index_confirmed = 0
+        MINER.blockchain_instance.index_confirmed = -1
         MINER.blockchain_instance.balances = {}
         MINER.blockchain_instance.update_balances()
         MINER.restart_mining()
@@ -134,13 +134,6 @@ def broadcast_new_block(exported_block: str = "", block_data = {}):
     for socket_client in socket_clients:
         socket_client.emit(bf,bd) # connections which the current server has started
 
-def return_unconfirmed_blocks():
-    exported_blocks = MINER.blockchain_instance.export_blockchain(unconfirmed_blocks=True)
-    bf,bd = "return_unconfirmed_blocks",{"block": exported_blocks, "broadcast_id": time.time()}
-    print("Broadcasting multiple Blocks :)")
-    socketio.emit(bf,bd) # connections set up by clients
-    for socket_client in socket_clients:
-        socket_client.emit(bf,bd) # connections which the current server has started
 
 def broadcast_transaction_request(transaction: str="", transaction_data = {}):
     if transaction != "":
@@ -185,6 +178,9 @@ def set_socket_listeners(socket_client):
     @socket_client.on('broadcast_transaction_request')
     def on_broadcast_transaction_request_(data):
         return on_broadcast_transaction_request(data)
+    @socketio.on('request_unconfirmed_blocks')
+    def on_request_unconfirmed_blocks_():
+        return on_request_unconfirmed_blocks()
 
 # Receive events from connections set up by clients
 @socketio.on('broadcast_data')
@@ -241,12 +237,18 @@ def on_broadcast_new_block(data):
         if block[0].index > MINER.blockchain_instance.blockchain[-1].index:
             return_value = MINER.blockchain_instance.detect_blockchain_append(block[0])
             if return_value == ReturnValues.SingleBlockAppended:
+                MINER.restart_mining()
                 MINER.update_mempool(depth_to_purge=1)
 
             #Ask the peer that broadcasted the block for their previous five blocks
             if return_value == ReturnValues.SingleBlockRejected:
+                ##################################################
                 #TODO: How do I get this SPECIFIC peer's blockchain?
-                return "????"
+                socketio.emit('request_unconfirmed_blocks',{})
+                for socket_client in socket_clients:
+                    socket_client.emit('request_unconfirmed_blocks',{})
+                return
+                ##################################################
         
 #If a new block's hash does not line up with the previous block's hash, get the peer's last five blocks and check for changes within
 @socketio.on('return_unconfirmed_blocks')
@@ -270,19 +272,23 @@ def on_broadcast_transaction_request(data):
         print("Transaction received ******** ")
         transaction_dict = json.loads(data["transaction"])
 
-        transaction_dict["origin_public_key"] = transaction_dict["origin_public_key"].encode('utf-8')
-        # #signed_transaction.signature = signed_transaction.signature.decode("utf-8")
-        transaction_dict["signature"] = b64decode(transaction_dict["signature"])#.encode('utf-8')
-        transaction_dict["message"] = transaction_dict["message"].encode('utf-8')
+        serializable_signed_transaction = dacite.from_dict(data_class=SerializableSignedTransaction, data={k: v for k, v in transaction_dict.items() if v is not None})
+        signed_transaction = deserialize_signed_transaction(serializable_signed_transaction)
 
-        transaction = SignedTransaction(transaction_dict["origin_public_key"],transaction_dict["signature"],transaction_dict["message"])
-
-        #transaction = dacite.from_dict(data_class=SignedTransaction, data={k: v for k, v in transaction_dict.items() if v is not None})
-        transaction_data = verify_transaction(transaction)
+        transaction_data = verify_transaction(signed_transaction)
         #Only allow spending values greater than 0
         if transaction_data.amount > 0:
-            MINER.mempool.append(transaction)
-            broadcast_transaction_request(transaction_data=data)
+            MINER.mempool.append(signed_transaction)
+            broadcast_transaction_request(transaction="", transaction_data=data)
+
+@socketio.on('request_unconfirmed_blocks')
+def on_request_unconfirmed_blocks():
+    exported_blocks = MINER.blockchain_instance.export_blockchain(unconfirmed_blocks=True)
+    bf,bd = "return_unconfirmed_blocks",{"block": exported_blocks, "broadcast_id": time.time()}
+    print("Broadcasting multiple Blocks :)")
+    socketio.emit(bf,bd) # connections set up by clients
+    for socket_client in socket_clients:
+        socket_client.emit(bf,bd) # connections which the current server has started
 
 
 def message_previously_received(data):
