@@ -115,8 +115,8 @@ class UdocoinMiner:
                 #Re-encode to broadcast in JSON format
                 serializable_signed_transaction = serialize_signed_transaction(signed_transaction)
             
-                if os.environ["IS_SEED_SERVER"]:
-                    server_comm.broadcast_transaction_request(transaction=json.dumps(serializable_signed_transaction,cls=EnhancedJSONEncoder), transaction_data= {})
+                
+                server_comm.broadcast_transaction_request(transaction=json.dumps(serializable_signed_transaction,cls=EnhancedJSONEncoder), transaction_data= {})
                 return "Received transaction and added it to mempool. Your transaction will be processed once 5 more blocks have been published"
             else:
                 return "Transaction request already received."
