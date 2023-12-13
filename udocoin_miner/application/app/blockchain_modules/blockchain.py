@@ -59,6 +59,7 @@ class Blockchain:
             b = self.hash(previous_block)
             if block.prev_hash != self.hash(previous_block) and previous_block != blockchain[0]:
                 #raise Exception("Wrong previous hash detected, block rejected!")
+                print("Wrong previous hash detected, block rejected!")
                 return False
 
             previous_proof = previous_block.proof_of_work
@@ -75,10 +76,12 @@ class Blockchain:
             if hash_operation[:5] != "00000" and index > 1:
                 print(hash_operation)
                 #raise Exception("Invalid proof of work detected, block rejected!")
+                print("Invalid proof of work detected, block rejected!")
                 return False
 
             if block.block_value  != self.get_block_value(index):
                 #raise Exception("Wrong block value detected, block rejected!")
+                print("Wrong block value detected, block rejected!")
                 return False
 
             previous_block = block
@@ -128,10 +131,14 @@ class Blockchain:
                                 new_balances[message.destination_public_key] = message.amount
                         else:
                             self.blockchain.pop()
-                            raise Exception("Account Balance of Origin Address too low! Block rejected!")
+                            #raise Exception("Account Balance of Origin Address too low! Block rejected!")
+                            print("Account Balance of Origin Address too low! Block rejected!")
+                            return False
                     else:
                         self.blockchain.pop()
-                        raise Exception("Origin Address not found. Block rejected!")
+                        #raise Exception("Origin Address not found. Block rejected!")
+                        print("Origin Address not found. Block rejected!")
+                        return False
                 print("CONFIRMED BLOCK", self.index_confirmed)
                 
 
@@ -161,7 +168,9 @@ class Blockchain:
                 return json.dumps(exported_blockchain[-1], cls=EnhancedJSONEncoder)
             return json.dumps(exported_blockchain, cls=EnhancedJSONEncoder)
         else:
-            raise Exception("Export failed due to invalid blockchain!")
+            #raise Exception("Export failed due to invalid blockchain!")
+            print("Export failed due to invalid blockchain!")
+            return False
 
 
     
