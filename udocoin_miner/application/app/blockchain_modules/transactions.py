@@ -6,16 +6,16 @@ from cryptography.hazmat.primitives.serialization import load_pem_private_key, l
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey, RSAPublicKey
 from base64 import decode, b64encode
 from cryptography.exceptions import InvalidSignature
 import os,re
 
 
-def sign_transaction(priv_key, pub_key_bytes, transaction_data: TransactionData) -> SignedTransaction:
+def sign_transaction(priv_key: RSAPrivateKey, pub_key_bytes: bytes, transaction_data: TransactionData) -> SignedTransaction:
 
     transaction_data = asdict(transaction_data)
     transaction_data["timestamp"] = str(transaction_data["timestamp"])
-    transaction_data["origin_public_key"] = transaction_data["origin_public_key"]
     transaction_data = dumps(transaction_data).encode('utf-8')
 
     signed_transaction_data = priv_key.sign(
@@ -96,12 +96,12 @@ def verify_transaction(signed_transaction: SignedTransaction) -> TransactionData
 
 
 
-def get_priv_key():
+def get_priv_key() -> RSAPrivateKey:
     key_str = os.environ["PRIVKEY"]
     key_bytes = bytes(key_str, 'utf-8')
     return load_pem_private_key(key_bytes,None,default_backend)
 
-def get_pub_key():
+def get_pub_key() -> RSAPublicKey:
     key_str = os.environ["PUBKEY"]
     key_bytes = bytes(key_str, 'utf-8')
     return load_pem_public_key(key_bytes,default_backend)
@@ -109,11 +109,11 @@ def get_pub_key():
 def get_pub_key_string() -> str:
     return os.environ["PUBKEY"]
 
-def get_priv_key_from_path(path:str):
+def get_priv_key_from_path(path:str) -> str:
     with open(path, "r") as f:
         return f.read()
 
-def get_pub_key_from_path(path: str):
+def get_pub_key_from_path(path: str) -> str:
     with open(path, "r") as f:
         return f.read()
 

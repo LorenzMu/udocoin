@@ -1,5 +1,5 @@
 from app.blockchain_modules.UdocoinMiner import UdocoinMiner
-from app.server_comm import * 
+#from app.server_comm import * 
 
 def fork_test():
     print("STARTING FORK TEST")
@@ -23,5 +23,7 @@ def fork_test():
     #assert my_miner.blockchain_instance.blockchain == bl2
 
     print("Blockchains are equal", my_miner.blockchain_instance.blockchain == bl2 )
+
+    print(my_miner.blockchain_instance.blockchain)
 
     print("FINISHED CONSENSUS TEST")

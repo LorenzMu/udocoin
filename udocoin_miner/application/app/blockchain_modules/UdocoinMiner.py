@@ -1,3 +1,4 @@
+from copy import deepcopy
 from app.blockchain_modules.blockchain import Blockchain
 from app.blockchain_modules.udocoin_dataclasses import *
 from app.blockchain_modules.transactions import *
@@ -34,7 +35,7 @@ class UdocoinMiner:
             if new_block is None:
                 self.mining = False
             print("Found new Block!!!")
-            # TODO handle new_block
+            
             exported_block = self.blockchain_instance.export_blockchain(single_block=True)
             # broadcast blockchain instance
             server_comm.broadcast_new_block(exported_block)
@@ -45,7 +46,7 @@ class UdocoinMiner:
         time.sleep(0.1)
         self.continue_mining()
 
-    def is_mining(self):
+    def is_mining(self) -> bool:
         return self.mining
 
     def continuous_mining(self):
@@ -112,15 +113,10 @@ class UdocoinMiner:
                 #binary mode! not serializable to json
                 self.mempool.append(signed_transaction)
                 #Re-encode to broadcast in JSON format
-                signed_transaction.origin_public_key = signed_transaction.origin_public_key.decode("utf-8")
-                signed_transaction.signature = b64encode(signed_transaction.signature).decode('utf-8')
-                signed_transaction.message = signed_transaction.message.decode("utf-8")
+                serializable_signed_transaction = serialize_signed_transaction(signed_transaction)
+            
                 
-                
-
-                
-                if os.environ["IS_SEED_SERVER"]:
-                    server_comm.broadcast_transaction_request(json.dumps(signed_transaction,cls=EnhancedJSONEncoder))
+                server_comm.broadcast_transaction_request(transaction=json.dumps(serializable_signed_transaction,cls=EnhancedJSONEncoder), transaction_data= {})
                 return "Received transaction and added it to mempool. Your transaction will be processed once 5 more blocks have been published"
             else:
                 return "Transaction request already received."
@@ -149,23 +145,30 @@ class UdocoinMiner:
     #Collects transactions from the mempool that can be published in the next published block in one list    
     def get_valid_transactions(self) -> BlockData:
         publishable_transactions = []
-        temp_balances = self.blockchain_instance.balances
+        temp_balances = deepcopy(self.blockchain_instance.balances)
 
         transaction_data_list = [verify_transaction(s_t) for s_t in self.mempool]
+        print("T_DATA_LIST", transaction_data_list)
         #remove unverifiable messages
-        transaction_data_list = [s_t for s_t in transaction_data_list if s_t != None]
+        transaction_data_list = [t_d for t_d in transaction_data_list if t_d != None]
+
+        print("T_DATA_LIST", transaction_data_list)
 
         #Check if account balance is high enough to make transaction
         for transaction_data in transaction_data_list:
-            if transaction_data.origin_public_key.encode() in temp_balances.keys() and (transaction_data.amount <= temp_balances[transaction_data.origin_public_key.encode()]):
-                temp_balances[transaction_data.origin_public_key.encode()]-= transaction_data.amount
-                if temp_balances[transaction_data.destination_public_key.encode()] in temp_balances.keys():
-                    temp_balances[transaction_data.destination_public_key.encode()] += transaction_data.amount
+            if transaction_data.origin_public_key in temp_balances.keys() and (transaction_data.amount <= temp_balances[transaction_data.origin_public_key]) and transaction_data.amount > 0:
+                temp_balances[transaction_data.origin_public_key]-= transaction_data.amount
+                if transaction_data.destination_public_key in temp_balances.keys():
+                    temp_balances[transaction_data.destination_public_key] += transaction_data.amount
                 else:
-                    temp_balances[transaction_data.destination_public_key.encode()] = transaction_data.amount
+                    temp_balances[transaction_data.destination_public_key] = transaction_data.amount
                 publishable_transactions.append(transaction_data)
         
+        print("PUBLISHABLE TRANSACTIONS", publishable_transactions)
+
         publishable_signed_transactions = BlockData([s_t for s_t in self.mempool if (TransactionData(**loads(s_t.message)) in publishable_transactions)])
+        print("PUBLISHABLE SIGNED TRANSACTIONS", publishable_signed_transactions)
+
         return publishable_signed_transactions
         
 class EnhancedJSONEncoder(json.JSONEncoder):

@@ -1,3 +1,4 @@
+from base64 import b64decode, b64encode
 import datetime
 import hashlib
 import json
@@ -13,6 +14,13 @@ class TransactionData:
 #message is a json dump of a TransactionData object
 @dataclass
 class SignedTransaction:
+    origin_public_key: bytes
+    signature: bytes
+    #message may not be passed in the final implementation as it is redundant; the message is encoded in the signature
+    message: bytes
+
+@dataclass
+class SerializableSignedTransaction:
     origin_public_key: str
     signature: str
     #message may not be passed in the final implementation as it is redundant; the message is encoded in the signature
@@ -21,6 +29,10 @@ class SignedTransaction:
 @dataclass
 class BlockData:
     transaction_list: list[SignedTransaction]
+
+@dataclass
+class SerializableBlockData:
+    transaction_list: list[SerializableSignedTransaction]
 
 @dataclass
 class Block:
@@ -33,8 +45,36 @@ class Block:
     block_value: float=None
 
 @dataclass
+class SerializableBlock:
+    data: SerializableBlockData
+    proof_of_work: int
+    prev_hash: str
+    index: int
+    block_author_public_key: str=None
+    # block_author_signature: str=None
+    block_value: float=None
+
+@dataclass
 class AccountBalance:
     public_key: str
     balance: float
 
+#To be able to use cryptography functions, bytes objects are required
+def deserialize_signed_transaction(serializable_signed_transaction: SerializableSignedTransaction) -> SignedTransaction:
+    origin_public_key = serializable_signed_transaction.origin_public_key.encode('utf-8')
+    signature = b64decode(serializable_signed_transaction.signature)
+    message = serializable_signed_transaction.message.encode('utf-8')
+
+    return SignedTransaction(origin_public_key=origin_public_key, signature=signature, message=message)
+
+#To send JSON, bytes objects need to be converted to strings
+def serialize_signed_transaction(signed_transaction: SignedTransaction) -> SerializableSignedTransaction:
+    origin_public_key = signed_transaction.origin_public_key.decode("utf-8")
+    signature = b64encode(signed_transaction.signature).decode('utf-8')
+    message = signed_transaction.message.decode("utf-8")
+
+    return SerializableSignedTransaction(origin_public_key=origin_public_key, signature=signature, message=message)
+
+    
+               
 #print(Block(data=BlockData(origin_address="a",destination_address="b",timestamp="01.01.1970",amount=2),proof=1,prev_hash="no",index=1))
