@@ -36,9 +36,9 @@ class TransactionActivity : AppCompatActivity() {
             startActivity(intent)
             finish()
         }
-        findViewById<TextView>(R.id.destination_public_key).text = destinationPublicKey
-        findViewById<TextView>(R.id.private_key).text = privateKey
-        findViewById<TextView>(R.id.public_key).text = publicKey
+        findViewById<TextView>(R.id.destination_public_key).text = "Recipient public key:\n$destinationPublicKey"
+        // findViewById<TextView>(R.id.private_key).text = privateKey
+        findViewById<TextView>(R.id.public_key).text = "Your public key:\n$publicKey"
         findViewById<Button>(R.id.send_button).setOnClickListener { sendTransaction() }
     }
 
@@ -57,13 +57,15 @@ class TransactionActivity : AppCompatActivity() {
             destinationPublicKey,
             amount
         )
-        Toast.makeText(this,transaction,Toast.LENGTH_SHORT).show()
+        // Toast.makeText(this,transaction,Toast.LENGTH_SHORT).show()
         Log.d(TAG,transaction)
-        val successfull = blockchainManager.sendTransaction(this,transaction)
-        if(successfull){
-            Toast.makeText(this,"SUCCESS",Toast.LENGTH_SHORT).show()
+        val successful = blockchainManager.sendTransaction(this,transaction)
+        if(successful){
+            Toast.makeText(this,"Transaction sent.",Toast.LENGTH_SHORT).show()
+            val intent = Intent(this,MainActivity::class.java)
+            startActivity(intent)
         }else{
-            Toast.makeText(this,"BUUUH",Toast.LENGTH_SHORT).show()
+            Toast.makeText(this,"An Error occured",Toast.LENGTH_SHORT).show()
         }
     }
 }
