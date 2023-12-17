@@ -157,3 +157,6 @@ priv_key
 test.*
 
 blockchain_test*
+
+*.apk
+key.jks
