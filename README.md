@@ -4,12 +4,12 @@ A Blockchain-project as part of the class "Distributed Systems" in the winter se
 
 ## Contributors
 
-| Name | Matrikel number | Github account |
-| --- | --- | --- |
-| Matthias Heilmann | 4186046 | MatthiasHeilmann |
-| Lorenz Müller | 8350586 | LorenzMu |
-| Sean Schwarz | 3446064 | Ynfinity |
-| Leo Stadtler | 9230282 | LeoCityler |
+| Name | Matrikel number |
+| --- | --- |
+| Matthias Heilmann | 4186046 |
+| Lorenz Müller | 8350586 |
+| Sean Schwarz | 3446064 |
+| Leo Stadtler | 9230282 |
 
 # Guides
 
@@ -91,7 +91,7 @@ Follow the instructions in the terminal and the server will be running on [local
 
 ## Udocoin Wallet
 
-To create and send transactions the wallet app must be used. You can download the APK-File [here](https://drive.google.com/file/d/1yusORkja0yB-bQkYlmvke-RJx2j43PTV/view?usp=drive_link) and install it on you android device with an android version of at least 7.1.1.
+To create and send transactions the wallet app must be used. You can download the APK-File [here](https://drive.google.com/file/d/1yusORkja0yB-bQkYlmvke-RJx2j43PTV/view?usp=drive_link) and install it on you android device with an android version of at least 7.1.1. It is recommended to use a USB-cable to transfer the app to the mobile device.
 
 The app was developed and tested on 
 
@@ -99,6 +99,8 @@ The app was developed and tested on
 * Samsung Galaxy A52 (Android version 13)
 
 If there are problems with the installation of the APK-file, try to open the project in Android Studio to run the development version.
+
+The app will notify you that it's running with an unlicensed version of Ch
 
 # References
 
