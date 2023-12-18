@@ -1,6 +1,7 @@
 from app import app,server_comm
 from flask import request,redirect,abort
 import os,json
+from app import formate_key
 from app.miner import MINER
 from app.blockchain_modules.consensus_tests import consensus_test
 from app.blockchain_modules.udocoin_dataclasses import SignedTransaction, SerializableSignedTransaction, serialize_signed_transaction, deserialize_signed_transaction
@@ -38,9 +39,10 @@ def application_kill():
 def miner_index():
     output = f'''
 <p>Is currently mining: {MINER.is_mining()}</p>
-<p>Mining with public key: {os.environ["PUBKEY"]}</p>
+<p>Mining with public key:<br>{formate_key(os.environ["PUBKEY"])}</p>
 <p><a href="/miner/stop">stop mining</a> | <a href="/miner/continue">continue mining</a></p>
 '''
+# <p><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={formate_key(os.environ["PUBKEY"])}"></p>
     return output
 
 @app.route("/miner/blockchain")
