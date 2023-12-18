@@ -8,10 +8,13 @@ from app import server_comm as server_comm
 from typing import List
 import dataclasses
 import datetime
+import hashlib
+import json
 
 #Separate class, because different people may want to implement it differently
 #The blockchain as the central data structure is the consistent class and may not have different implementations
 class UdocoinMiner:
+    #Proof to start with may vary, i.e. in mining pools
     def __init__(self, proof_to_start_with: int):
         self.blockchain_instance: Blockchain = Blockchain()
         self.mempool: list[SignedTransaction] = []
@@ -37,7 +40,7 @@ class UdocoinMiner:
             print("Found new Block!!!")
             
             exported_block = self.blockchain_instance.export_blockchain(single_block=True)
-            # broadcast blockchain instance
+            # broadcast blockchain instance to the network
             server_comm.broadcast_new_block(exported_block)
 
     def restart_mining(self):
@@ -49,13 +52,15 @@ class UdocoinMiner:
     def is_mining(self) -> bool:
         return self.mining
 
+    #Creates a new thread to mine on
     def continuous_mining(self):
         print("Starting thread")
         mining_thread = threading.Thread(target=self.start_mining)
         mining_thread.start()
         print("Thread running")
 
-
+    #Mines blocks by continuously looking for new proofs in self.generate_proof_of_work()
+    #Once a valid proof is found, add all transactions in the mempool to the newly published block
     def mine_block(self) -> Block:
         previous_block = self.blockchain_instance.get_previous_block()
         previous_PoW = previous_block.proof_of_work
@@ -66,18 +71,17 @@ class UdocoinMiner:
         prev_hash = self.blockchain_instance.hash(previous_block)
 
         data = self.get_valid_transactions()
-        
-        #for now use static data
-        #data = static_data()
         new_block = Block(data=data, proof_of_work=new_PoW, prev_hash=prev_hash, index=new_index, 
                         block_author_public_key=get_pub_key_string(),
                         block_value=self.blockchain_instance.get_block_value(new_index))
 
         self.blockchain_instance.append_blockchain(block = new_block)
+        #Purge all integrated transactioin from local mempool
         self.update_mempool()
         self.new_proof = self.proof_to_start_with
         return new_block
-
+    
+    #Loops through intger values until the formula defined in blockchain.generate_pre_hash() hashes to the amount of ending 0 bits defined below
     def generate_proof_of_work(self, previous_PoW: int, index: int, data: str) -> int:
         check_proof = False
 
@@ -86,13 +90,11 @@ class UdocoinMiner:
                 return None
             data_to_hash = self.blockchain_instance.generate_pre_hash(self.new_proof, previous_PoW, index, data)
             hash_operation = hashlib.sha256(data_to_hash).hexdigest()
-            #If last four digits of the hash are "0", the proof is accepted
+            #If last five digits of the hash are "0", the proof is accepted
             if hash_operation[:5]== "00000":
                 check_proof = True
             else:
                 self.new_proof += 1
-        
-        # print(new_proof)
 
         return self.new_proof
 
@@ -110,7 +112,7 @@ class UdocoinMiner:
         if self.validate_transaction(signed_transaction= signed_transaction, balances= self.blockchain_instance.balances): 
             if signed_transaction not in self.mempool:
                 
-                #binary mode! not serializable to json
+                #This is binary data, which is not serializable to json
                 self.mempool.append(signed_transaction)
                 #Re-encode to broadcast in JSON format
                 serializable_signed_transaction = serialize_signed_transaction(signed_transaction)
@@ -138,13 +140,14 @@ class UdocoinMiner:
             #Delete all already integrated blocks from the mempool
             transactions_without_blocks = [s_t for s_t in self.mempool if s_t not in transaction_list]
             
-            #Delete all transactions that are too old
-            # self.mempool = [s_t for s_t in transactions_without_blocks if verify_transaction(s_t).timestamp > cut_off_time]
+            #Delete all transactions that are too old => currently untested, and as such not taken into account
+            #self.mempool = [s_t for s_t in transactions_without_blocks if verify_transaction(s_t).timestamp > cut_off_time]
             self.mempool = transactions_without_blocks
 
     #Collects transactions from the mempool that can be published in the next published block in one list    
     def get_valid_transactions(self) -> BlockData:
         publishable_transactions = []
+        #Create copy of balances to check if transactions can be completed with the currently available balance
         temp_balances = deepcopy(self.blockchain_instance.balances)
 
         transaction_data_list = [verify_transaction(s_t) for s_t in self.mempool]
@@ -170,7 +173,10 @@ class UdocoinMiner:
         print("PUBLISHABLE SIGNED TRANSACTIONS", publishable_signed_transactions)
 
         return publishable_signed_transactions
-        
+    
+
+#This is required for dataclass object json serialization
+#Taken from https://stackoverflow.com/questions/51286748/make-the-python-json-encoder-support-pythons-new-dataclasses
 class EnhancedJSONEncoder(json.JSONEncoder):
         def default(self, o):
             if dataclasses.is_dataclass(o):
@@ -178,6 +184,7 @@ class EnhancedJSONEncoder(json.JSONEncoder):
             return super().default(o)
         
 
+#Test function to create a dummy transaction
 def static_data():
     pub_key_str = get_pub_key_string()
     my_transaction_data = TransactionData(pub_key_str, "my_destination_adress", timestamp=datetime.datetime.now(), amount=50)
@@ -186,16 +193,3 @@ def static_data():
 
     return BlockData([signed_trans])
 
-# my_miner = UdocoinMiner(proof_to_start_with=1000)
-# for i in range(3):
-#     my_miner.mine_block()
-# print(my_miner.blockchain_instance.blockchain[-3:])
-# print(my_miner.blockchain_instance.balances)
-# #my_miner.blockchain_instance.blockchain[3].data.transaction_list[0].signature = 
-# #my_miner.blockchain_instance.validate_blockchain()
-# with open("blockchain_export.txt", "w") as file:
-#     file.write(my_miner.blockchain_instance.export_blockchain())
-
-# with open("blockchain_export.txt", "r") as file:
-#     my_miner.blockchain_instance.import_blockchain(file.read())
- 
