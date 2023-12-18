@@ -59,7 +59,18 @@ def verify_transaction(signed_transaction: SignedTransaction) -> TransactionData
         print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         print(signed_transaction.message)
         print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-        return TransactionData(**loads(signed_transaction.message))
+        #Check that origin public key in message is the same as the origin public key in the signed_transaction object
+        #If this is not done, an attacker could sign a message with their private key, leaving somebody else's public key in tge
+        t_data = TransactionData(**loads(signed_transaction.message))
+        if type(t_data.origin_public_key) == bytes:
+            if t_data.origin_public_key == signed_transaction.origin_public_key:
+                return t_data
+            
+        elif type(t_data.origin_public_key) == str:
+            comp_variable = bytes(t_data.origin_public_key, "utf-8")
+            if comp_variable == signed_transaction.origin_public_key:
+                return t_data
+        return None
         
     except InvalidSignature:
         return None  #"Message signature could not be verified!"
