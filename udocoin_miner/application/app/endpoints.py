@@ -37,12 +37,25 @@ def application_kill():
 
 @app.route("/miner")
 def miner_index():
+    key = os.environ["PUBKEY"]
+    print("key:",key)
+    formated_key = formate_key(key).replace("\n","_")
+    print("formated key: ",formated_key)
     output = f'''
 <p>Is currently mining: {MINER.is_mining()}</p>
-<p>Mining with public key:<br>{formate_key(os.environ["PUBKEY"])}</p>
-<p><a href="/miner/stop">stop mining</a> | <a href="/miner/continue">continue mining</a></p>
+<p><img id="qr_code_img" alt="{key}"></p>
+<p><a href="/miner/stop">stop mining</a> 
+| <a href="/miner/continue">continue mining</a>
+| <a href="/miner/blockchain" target="_blank">See blockchain</a>
+| <a href="/miner/get_balance/all" target="_blank">See balances</a>
+| <a href="/miner/mempool" target="_blank">See Mempool</a></p>
+<script>
+    const key = "{formated_key}";
+    const src = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" + key.replaceAll("_","\\n")
+    console.log(src)
+    document.getElementById("qr_code_img").src = encodeURI(src);
+</script>
 '''
-# <p><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={formate_key(os.environ["PUBKEY"])}"></p>
     return output
 
 @app.route("/miner/blockchain")
