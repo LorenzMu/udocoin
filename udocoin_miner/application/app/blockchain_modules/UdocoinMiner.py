@@ -44,10 +44,12 @@ class UdocoinMiner:
             server_comm.broadcast_new_block(exported_block)
 
     def restart_mining(self):
+        was_mining = self.mining
         self.stop_mining()
         self.new_proof = self.proof_to_start_with
         time.sleep(0.1)
-        self.continue_mining()
+        if was_mining:
+            self.continue_mining()
 
     def is_mining(self) -> bool:
         return self.mining
