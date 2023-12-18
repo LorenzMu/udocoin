@@ -19,7 +19,7 @@ The following paragraphs explain how to run the miner-application and the wallet
 
 ### Docker/docker-compose
 
-To run the udocoin miner application, with Docker you need to have Docker Desktop and docker-compose installed on your maschine. 
+To run the udocoin miner application, with Docker you need to have Docker Desktop and docker-compose installed on your machine. 
 
 If you don't have a public and a private key, you also need to have at least python 3.8 to generate keys. (See References for testing keys)
 

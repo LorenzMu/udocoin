@@ -1,6 +1,8 @@
 from app.blockchain_modules.blockchain import Blockchain
 from app.blockchain_modules.UdocoinMiner import UdocoinMiner
 
+#This file tests the consensus algorithm by creating several miner objects and having them mine different amounts of blocks
+#The longest blockchain is chosen as the consensus blockchain
 def consensus_test():
     print("STARTING CONSENSUS TEST")
     my_miner = UdocoinMiner(proof_to_start_with=1000)
