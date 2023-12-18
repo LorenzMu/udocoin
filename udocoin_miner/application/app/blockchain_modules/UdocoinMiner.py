@@ -153,11 +153,11 @@ class UdocoinMiner:
         temp_balances = deepcopy(self.blockchain_instance.balances)
 
         transaction_data_list = [verify_transaction(s_t) for s_t in self.mempool]
-        print("T_DATA_LIST", transaction_data_list)
+        # print("T_DATA_LIST", transaction_data_list)
         #remove unverifiable messages
         transaction_data_list = [t_d for t_d in transaction_data_list if t_d != None]
 
-        print("T_DATA_LIST", transaction_data_list)
+        # print("T_DATA_LIST", transaction_data_list)
 
         #Check if account balance is high enough to make transaction
         for transaction_data in transaction_data_list:
@@ -169,10 +169,10 @@ class UdocoinMiner:
                     temp_balances[transaction_data.destination_public_key] = transaction_data.amount
                 publishable_transactions.append(transaction_data)
         
-        print("PUBLISHABLE TRANSACTIONS", publishable_transactions)
+        # print("PUBLISHABLE TRANSACTIONS", publishable_transactions)
 
         publishable_signed_transactions = BlockData([s_t for s_t in self.mempool if (TransactionData(**loads(s_t.message)) in publishable_transactions)])
-        print("PUBLISHABLE SIGNED TRANSACTIONS", publishable_signed_transactions)
+        # print("PUBLISHABLE SIGNED TRANSACTIONS", publishable_signed_transactions)
 
         return publishable_signed_transactions
     

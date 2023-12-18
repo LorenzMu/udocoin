@@ -47,12 +47,12 @@ class Blockchain:
         return hashlib.sha256(str(block).encode()).hexdigest()
 
     def validate_blockchain(self, blockchain: list[Block]) -> bool:
-        print('************ Validating Blockchain ****************\n')
+        print('************ Validating Blockchain ****************')
         previous_block = blockchain[0]
         block_index = 1
 
         while block_index < len(blockchain):
-            print("index: ",block_index)
+            # print("index: ",block_index)
             block = blockchain[block_index]
             # Check if the previous hash of the current block is the same as the hash of its previous block
             if block.prev_hash != self.hash(previous_block) and previous_block != blockchain[0]:
@@ -84,6 +84,7 @@ class Blockchain:
             previous_block = block
             block_index += 1
 
+        print("Validated Blockchain of length",len(blockchain))
         return True
 
     def get_previous_block(self) -> Block | None:
@@ -103,7 +104,7 @@ class Blockchain:
             while self.index_confirmed < len(self.blockchain)-5:
                 self.index_confirmed+=1
                 print("CONFIRMING INDEX: ", self.index_confirmed)
-                print(self.balances)
+                # print(self.balances)
                 new_balances = self.balances
 
                 block = self.blockchain[self.index_confirmed]
