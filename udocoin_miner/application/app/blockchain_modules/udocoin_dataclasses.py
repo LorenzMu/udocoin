@@ -1,8 +1,8 @@
 from base64 import b64decode, b64encode
 import datetime
-import hashlib
-import json
 from dataclasses import dataclass
+
+#Dataclasses to more easily and stably use the required data structures
 
 @dataclass
 class TransactionData:
@@ -16,14 +16,12 @@ class TransactionData:
 class SignedTransaction:
     origin_public_key: bytes
     signature: bytes
-    #message may not be passed in the final implementation as it is redundant; the message is encoded in the signature
     message: bytes
 
 @dataclass
 class SerializableSignedTransaction:
     origin_public_key: str
     signature: str
-    #message may not be passed in the final implementation as it is redundant; the message is encoded in the signature
     message: str
 
 @dataclass
@@ -41,7 +39,6 @@ class Block:
     prev_hash: str
     index: int
     block_author_public_key: str=None
-    # block_author_signature: str=None
     block_value: float=None
 
 @dataclass
@@ -51,7 +48,6 @@ class SerializableBlock:
     prev_hash: str
     index: int
     block_author_public_key: str=None
-    # block_author_signature: str=None
     block_value: float=None
 
 @dataclass
@@ -74,7 +70,3 @@ def serialize_signed_transaction(signed_transaction: SignedTransaction) -> Seria
     message = signed_transaction.message.decode("utf-8")
 
     return SerializableSignedTransaction(origin_public_key=origin_public_key, signature=signature, message=message)
-
-    
-               
-#print(Block(data=BlockData(origin_address="a",destination_address="b",timestamp="01.01.1970",amount=2),proof=1,prev_hash="no",index=1))

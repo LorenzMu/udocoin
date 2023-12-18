@@ -6,7 +6,10 @@ from cryptography.hazmat import primitives,backends
 from cryptography.hazmat.primitives import asymmetric,serialization
 from cryptography.exceptions import InvalidSignature
 
-print("INITING")
+#This file implements the same functions used in the wallet app to create transactions
+#This lets you create transaction requests using your PC if you do not wish to use the wallet app
+
+print("INITIALIZING")
 
 @dataclasses.dataclass
 class TransactionData:
@@ -77,13 +80,16 @@ def create_transaction(private_key:str,public_key:str,destination_public_key:str
     verify_transaction(signed_transaction)
     return export_signed_transaction(signed_transaction)
 
-
+#Makes binary data serializable
 def export_signed_transaction(signed_transaction:SignedTransaction)->str:
     signed_transaction.origin_public_key = signed_transaction.origin_public_key.decode("utf-8")
     signed_transaction.signature = base64.b64encode(signed_transaction.signature).decode('utf-8')
     signed_transaction.message = signed_transaction.message.decode("utf-8")
     return json.dumps(signed_transaction,cls=EnhancedJSONEncoder) 
 
+
+#This is required for dataclass object json serialization
+#Taken from https://stackoverflow.com/questions/51286748/make-the-python-json-encoder-support-pythons-new-dataclasses
 class EnhancedJSONEncoder(json.JSONEncoder):
     def default(self, o):
         if dataclasses.is_dataclass(o):
@@ -99,12 +105,20 @@ def get_pub_key_from_path(path: str) -> str:
     with open(path, "r") as f:
         return f.read()
     
-print("INITING")
-    
-priv_key_str = get_priv_key_from_path("C:/Users/loren/.udocoin/priv_key")
-pub_key_str = get_pub_key_from_path("C:/Users/loren/.udocoin/pub_key.pub")
+priv_key_path = input("Please enter your private key's absolute path: ")
+pub_key_path = input("Please enter your public key's absolute path: ")
 
-transaction_request = create_transaction(priv_key_str,pub_key_str,"MATTHEW ES KLAPPT!!", 1000)
+#i.e. enter something like
+#C:/Users/loren/.udocoin/priv_key
+#C:/Users/loren/.udocoin/pub_key.pub
+
+destination_adress = input("Please enter your destination address: ")
+amount = float(input("Please enter the amount of Udocoins you wish to send: "))
+
+priv_key_str = get_priv_key_from_path(priv_key_path)
+pub_key_str = get_pub_key_from_path(pub_key_path)
+
+transaction_request = create_transaction(priv_key_str,pub_key_str,destination_adress, amount)
 print(transaction_request)
 
 

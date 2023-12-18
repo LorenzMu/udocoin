@@ -8,18 +8,21 @@ import dacite
 from copy import deepcopy
 from app.blockchain_modules.ReturnValues import ReturnValues
 
+#This class' basic structure is taken from https://github.com/sixfwa/blockchain-fastapi/blob/main/blockchain.py
+#Its functionality has been heavily extended by us, however.
 class Blockchain:
     def __init__(self):
-        #If no blockchain is found in the network, create your own blockchain 
         self.blockchain: list[Block] = []
         self.balances: dict[str, float] = {}
         self.index_confirmed = -1
 
+        #If no blockchain is found in the network, create your own blockchain 
         if self.get_consensus_blockchain(self.blockchain) == None:
             genesis_block = Block(data = BlockData(transaction_list=[]),
                                   proof_of_work= 1, prev_hash= "0", index = 0)
             self.append_blockchain(genesis_block)
             
+    #Extends blockchain and updates account balances
     def append_blockchain(self, block: Block) -> ReturnValues:
         self.blockchain.append(block)
         print("appending new block with prev_hash:", block.prev_hash)
@@ -35,6 +38,7 @@ class Blockchain:
             return ReturnValues.SingleBlockAppended
     
     #Do some arbitrary math to "work" the system
+    #This formula contains data from the previous block, so work on new blocks cannot be done before the previous block exists
     def generate_pre_hash(self, new_proof: int, previous_proof: int, index: int, data: str) -> str:
         pre_hash = str((((new_proof ** 3) + 1) * ((previous_proof**3)+1)) + index) + str(data)
         return pre_hash.encode()
@@ -51,17 +55,11 @@ class Blockchain:
             print("index: ",block_index)
             block = blockchain[block_index]
             # Check if the previous hash of the current block is the same as the hash of its previous block
-            # print("Previous Block: " + str(previous_block))
-            # print("This block:" + str(block))
-            #####print("Previous Hash: " + str(self.hash(previous_block)))
-            #####print("Previous Hash: " + str(block.prev_hash))
-            a = block.prev_hash
-            b = self.hash(previous_block)
             if block.prev_hash != self.hash(previous_block) and previous_block != blockchain[0]:
-                #raise Exception("Wrong previous hash detected, block rejected!")
                 print("Wrong previous hash detected, block rejected!")
                 return False
-
+            
+            #Check if the given proof_of_work lines up with the required amount of null bytes
             previous_proof = previous_block.proof_of_work
             index, previous_data, proof_of_work = block.index, previous_block.data, block.proof_of_work
             hash_operation = hashlib.sha256(
@@ -75,12 +73,11 @@ class Blockchain:
 
             if hash_operation[:5] != "00000" and index > 1:
                 print(hash_operation)
-                #raise Exception("Invalid proof of work detected, block rejected!")
                 print("Invalid proof of work detected, block rejected!")
                 return False
-
+            
+            #If the mining reward has been altered, reject the block
             if block.block_value  != self.get_block_value(index):
-                #raise Exception("Wrong block value detected, block rejected!")
                 print("Wrong block value detected, block rejected!")
                 return False
 
@@ -92,7 +89,7 @@ class Blockchain:
     def get_previous_block(self) -> Block | None:
         return self.blockchain[-1] if len(self.blockchain) > 0 else None
 
-    #Exponential block value decay
+    #Exponential block value decay to combat currency inflation
     def get_block_value(self, index):
         return 1024 / (2**(index//100))
 
@@ -111,8 +108,7 @@ class Blockchain:
 
                 block = self.blockchain[self.index_confirmed]
                 
-                #Get Block values summed per public key
-                balance_from_mining = AccountBalance(block.block_author_public_key, block.block_value)
+                #Add mining reward to block author's address
                 if block.block_author_public_key in new_balances.keys():
                     new_balances[block.block_author_public_key] += block.block_value
                 else:
@@ -131,19 +127,16 @@ class Blockchain:
                                 new_balances[message.destination_public_key] = message.amount
                         else:
                             self.blockchain.pop()
-                            #raise Exception("Account Balance of Origin Address too low! Block rejected!")
                             print("Account Balance of Origin Address too low! Block rejected!")
                             return False
                     else:
                         self.blockchain.pop()
-                        #raise Exception("Origin Address not found. Block rejected!")
                         print("Origin Address not found. Block rejected!")
                         return False
                 print("CONFIRMED BLOCK", self.index_confirmed)
-                
-
                 self.balances = new_balances
 
+    #Converts all binary data into JSON serializable form
     def export_blockchain(self, unconfirmed_blocks = False, single_block = False) -> str:
         exported_blockchain = []
 
@@ -160,20 +153,18 @@ class Blockchain:
                                                         block_value=block.block_value)
                 exported_blockchain.append(serializable_block)
     
-            # with open("blockchain_test_export","w") as file:
-            #     file.write(json.dumps(exported_blockchain, cls=EnhancedJSONEncoder))
+            #If only returning the unconfirmed blocks requested by a connected server
             if unconfirmed_blocks:
                 return json.dumps(exported_blockchain[-4:], cls=EnhancedJSONEncoder)
             if single_block:
                 return json.dumps(exported_blockchain[-1], cls=EnhancedJSONEncoder)
             return json.dumps(exported_blockchain, cls=EnhancedJSONEncoder)
         else:
-            #raise Exception("Export failed due to invalid blockchain!")
             print("Export failed due to invalid blockchain!")
             return False
 
 
-    
+    #Turns JSON serializable data back into binary data, which can be used by cryptography functions
     def import_blockchain(self, blockchain:str) -> list[Block]:
         loaded_blockchain = json.loads(blockchain) #This is a list[SerializableBlock]
         serializable_blockchain: list[SerializableBlock] = []
@@ -196,15 +187,10 @@ class Blockchain:
                           block_value= serializable_block.block_value)
             imported_blockchain.append(block)
 
-        # with open("blockchain_test_import","w") as file:
-        #     file.write(str(imported_blockchain))
-
-        #if self.validate_blockchain(imported_blockchain):
-        #    print("import succesful!")
         return imported_blockchain
 
 
-    #Here is where we will pass a list of blockchains from our P2P network to find a consensus blockchain
+    #Gets passed a list of blockchains from our P2P network to find a consensus blockchain
     def get_consensus_blockchain(self, list_of_blockchains: list[list[Block]]) -> list[Block] | None:
 
         #First delete any blockchains that can not be validated
@@ -224,7 +210,7 @@ class Blockchain:
 
                 #If only one blockchain has the highest proof of work, it is the consensus blockchain
                 #If there are multiple blockchains of equal length and equal highest proof of work, the network will eventually settle
-                #on a canonical blockchain, because eventually a block will be mined without a different miner finding it simultaneously.
+                #on a canonical blockchain, because, eventually, a block will be mined without a different miner finding it simultaneously.
                 #When this happens, the block will propagate throughout the network and the shorter blockchain fork will be eliminated.
                 return highest_pow_blockchains[0]
 
@@ -232,13 +218,13 @@ class Blockchain:
         else:
             return None
 
-    #Undoes a transaction; Gets called when one or multiple blocks are replaced in the blockchain
-    def undo_transaction(self, signed_transaction: SignedTransaction):
-        message = TransactionData(**json.loads(signed_transaction.message))
-        origin_public_key = message.origin_public_key
+    # #Undoes a transaction; Gets called when one or multiple blocks are replaced in the blockchain, not implemented, because rollbacks are not implemented
+    # def undo_transaction(self, signed_transaction: SignedTransaction):
+    #     message = TransactionData(**json.loads(signed_transaction.message))
+    #     origin_public_key = message.origin_public_key
        
-        self.balances[origin_public_key] += message.amount
-        self.balances[message.destination_public_key] -= message.amount
+    #     self.balances[origin_public_key] += message.amount
+    #     self.balances[message.destination_public_key] -= message.amount
 
 
     #Checks if new block's prev hash lines up with previous block's hash
@@ -271,22 +257,10 @@ class Blockchain:
             return ReturnValues.BlocksReplaced, fork_index
         return ReturnValues.BlocksRejected, "NaN"
 
-
-                    
-
+#This is required for dataclass object json serialization
+#Taken from https://stackoverflow.com/questions/51286748/make-the-python-json-encoder-support-pythons-new-dataclasses
 class EnhancedJSONEncoder(json.JSONEncoder):
         def default(self, o):
             if dataclasses.is_dataclass(o):
                 return dataclasses.asdict(o)
             return super().default(o)
-
-# my_blockchain = Blockchain(proof_to_start_with=1)
-# my_blockchain.mine_block(BlockData(transaction_list=[TransactionData("udos_wallet","seans_wallet",str(datetime.datetime.now()),50.2)]))
-# for i in my_blockchain.blockchain:  
-#     print("\n",i,"\n")
-
-# print(my_blockchain.validate_blockchain())
-
-# my_blockchain.blockchain[0].data.transaction_list[0].destination_address = "matthis_wallet"
-
-# print(my_blockchain.validate_blockchain())

@@ -114,6 +114,9 @@ def broadcast_data(data:dict):
     socketio.emit("broadcast_data",data)
     return data
 
+#In the following three functions, a timestamp is added to the data, if this is the first server to broadcast the data.
+#This prevents looping, as the listener functions for these broadcasts also call these functions if the timestamp has not been previously received.
+
 def broadcast_new_blockchain(exported_blockchain:str="",blockchain_data = {}):
     if exported_blockchain!="":
         bf,bd = "broadcast_new_blockchain",{"blockchain":exported_blockchain,"broadcast_id":time.time()}
@@ -240,17 +243,17 @@ def on_broadcast_new_block(data):
                 MINER.restart_mining()
                 MINER.update_mempool(depth_to_purge=1)
 
-            #Ask the peer that broadcasted the block for their previous five blocks
+            #If the block was rejected for some reason, ask the connected servers for their previous five blocks in order to see if the
+            #current server is missing any blocks
             if return_value == ReturnValues.SingleBlockRejected:
                 ##################################################
-                #TODO: How do I get this SPECIFIC peer's blockchain?
                 socketio.emit('request_unconfirmed_blocks',{})
                 for socket_client in socket_clients:
                     socket_client.emit('request_unconfirmed_blocks',{})
                 return
                 ##################################################
         
-#If a new block's hash does not line up with the previous block's hash, get the peer's last five blocks and check for changes within
+#If a new block's hash does not line up with the previous block's hash, get the connected servers' last five blocks and check for changes within
 @socketio.on('return_unconfirmed_blocks')
 def on_return_unconfirmed_blocks(data):
     if not message_previously_received(data):
@@ -290,9 +293,9 @@ def on_request_unconfirmed_blocks():
     for socket_client in socket_clients:
         socket_client.emit(bf,bd) # connections which the current server has started
 
-
+#This function prevents infinite looping of data broadcasts
 def message_previously_received(data):
-    # Only broadcast once, stop propagation otherwise
+    # Only broadcast data once, stop propagation otherwise
     global received_broadcast_ids
     broadcast_id = data["broadcast_id"]
     if broadcast_id in received_broadcast_ids:

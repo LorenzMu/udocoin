@@ -11,7 +11,6 @@ from base64 import decode, b64encode
 from cryptography.exceptions import InvalidSignature
 import os,re
 
-
 def sign_transaction(priv_key: RSAPrivateKey, pub_key_bytes: bytes, transaction_data: TransactionData) -> SignedTransaction:
 
     transaction_data = asdict(transaction_data)
@@ -29,7 +28,7 @@ def sign_transaction(priv_key: RSAPrivateKey, pub_key_bytes: bytes, transaction_
 
     return SignedTransaction(pub_key_bytes, signed_transaction_data, transaction_data)
 
-
+#Verifies transaction signature's authenticity
 def verify_transaction(signed_transaction: SignedTransaction) -> TransactionData:
     # print("Verifying transaction....")
     # print("=================================")
@@ -55,46 +54,27 @@ def verify_transaction(signed_transaction: SignedTransaction) -> TransactionData
             ),
             hashes.SHA256()
         )
-        print("Message signature was verified, the message is as follows:")
-        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-        print(signed_transaction.message)
-        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-        return TransactionData(**loads(signed_transaction.message))
+
+        # print("Message signature was verified, the message is as follows:")
+        # print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+        # print(signed_transaction.message)
+        # print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+
+        #Check that origin public key in message is the same as the origin public key in the signed_transaction object
+        #If this is not done, an attacker could sign a message with their private key, leaving somebody else's public key in tge
+        t_data = TransactionData(**loads(signed_transaction.message))
+        if type(t_data.origin_public_key) == bytes:
+            if t_data.origin_public_key == signed_transaction.origin_public_key:
+                return t_data
+            
+        elif type(t_data.origin_public_key) == str:
+            comp_variable = bytes(t_data.origin_public_key, "utf-8")
+            if comp_variable == signed_transaction.origin_public_key:
+                return t_data
+        return None
         
     except InvalidSignature:
         return None  #"Message signature could not be verified!"
-
-# def sign_block():
-#     priv_key = get_priv_key()
-#     signed_transaction_data = priv_key.sign(
-#         "VALID SIGNATURE",
-#         padding.PSS(
-#             mgf=padding.MGF1(hashes.SHA256()),
-#             salt_length=padding.PSS.MAX_LENGTH
-#         ),
-#         hashes.SHA256()
-#         )
-
-# def verify_block_author_signature(block: Block):
-#     signature = block.block_author_signature
-#     pub_key_obj = load_pem_public_key(block.block_author_public_key, default_backend())
-
-#     try:
-#         pub_key_obj.verify(
-#             block.block_author_signature,
-#             "VALID SIGNATURE",
-#             padding.PSS(
-#                 mgf=padding.MGF1(hashes.SHA256()),
-#                 salt_length=padding.PSS.MAX_LENGTH
-#             ),
-#             hashes.SHA256()
-#         )
-#         return True
-        
-#     except InvalidSignature:
-#         return None  #"Message signature could not be verified!"
-
-
 
 def get_priv_key() -> RSAPrivateKey:
     key_str = os.environ["PRIVKEY"]
@@ -116,26 +96,3 @@ def get_priv_key_from_path(path:str) -> str:
 def get_pub_key_from_path(path: str) -> str:
     with open(path, "r") as f:
         return f.read()
-
-
-# my_transaction_data = TransactionData(get_pub_key_string("pub_key.txt"), "schmarn", timestamp=datetime.now(), amount=50)
-
-# signed_trans = sign_transaction(get_priv_key("priv_key.txt"), get_pub_key_string("pub_key.txt"), my_transaction_data)
-
-
-
-# print(verify_transaction(signed_trans))
-
-
-# signed_trans.message = signed_trans.message + b"ich bin ein kleiner hacker"
-
-# print(verify_transaction(signed_trans))
-
-# print(signed_trans.origin_public_key)
-# print("~~~~~~~~~~~~~~")
-# print(signed_trans.signed_transaction)
-
-# print(type(signed_trans.origin_public_key))
-# print(type(signed_trans.signed_transaction))
-
-
