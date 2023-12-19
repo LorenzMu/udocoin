@@ -11,13 +11,25 @@ def seed_is_active(ip:str)->bool:
         return False
 
 def get_known_seeds():
-    seeds = json.load(open(os.path.join(pathlib.Path(__file__).parent,"seeds.json")))
-    active_seeds = []
-    for seed in seeds:
-        if seed_is_active(seed):
-            active_seeds.append(seed)
-    print("Found as active seeds: " + str(active_seeds))
-    return active_seeds
+    username = "LorenzMu"
+    repository = "udocoin"
+    filename = "known_seeds.json"
+
+    api_url = f"https://api.github.com/repos/{username}/{repository}/contents/{filename}"
+
+    response = requests.get(api_url)
+
+    if response.status_code == 200:
+        content_info = response.json()
+        content_base64 = content_info.get("content", "")
+        import base64
+        content = base64.b64decode(content_base64).decode('utf-8')
+        seeds = json.loads(content)
+        return seeds
+    else:
+        print(f"Error: {response.status_code}")
+        print(response.text)
+        raise Exception("Error getting seed list:", response.text)
 
 def post_transaction(transaction:str)->str:
     transaction = json.load(transaction)

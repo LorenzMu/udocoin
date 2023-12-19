@@ -41,6 +41,7 @@ def miner_index():
     print("key:",key)
     formated_key = formate_key(key).replace("\n","_")
     print("formated key: ",formated_key)
+    # sorry for that, the keys formatting breaks with only html
     output = f'''
 <p>Is currently mining: {MINER.is_mining()}</p>
 <p><img id="qr_code_img" alt="{key}"></p>

@@ -14,6 +14,27 @@ from base64 import b64encode, b64decode
 
 from app.miner import MINER
 
+def get_known_seeds():
+    username = "LorenzMu"
+    repository = "udocoin"
+    filename = "known_seeds.json"
+
+    api_url = f"https://api.github.com/repos/{username}/{repository}/contents/{filename}"
+
+    response = requests.get(api_url)
+
+    if response.status_code == 200:
+        content_info = response.json()
+        content_base64 = content_info.get("content", "")
+        import base64
+        content = base64.b64decode(content_base64).decode('utf-8')
+        seeds = json.loads(content)
+        return seeds
+    else:
+        print(f"Error: {response.status_code}")
+        print(response.text)
+        raise Exception("Error getting seed list:", response.text)
+
 def update_known_seeds():
     received_known_seeds = []
     known_seeds = json.loads(os.environ["known_seeds"])

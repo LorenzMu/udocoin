@@ -84,10 +84,13 @@ from app import server_comm as server_comm
 
 if "known_seeds" not in os.environ.keys() or len(json.loads(os.environ["known_seeds"])) == 0:
     print("Found no seeds in env-variables")
-    o = json.load(open(os.path.join(pathlib.Path(__file__).parent.parent,"seeds.json")))
-    str = json.dumps(o)
-    os.environ["known_seeds"] = str
-    print("Found seeds in local file: " + str)
+    known_seeds = server_comm.get_known_seeds()
+    os.environ["known_seeds"] = json.dumps(known_seeds)
+    ###### DEPRECATED ######
+    # o = json.load(open(os.path.join(pathlib.Path(__file__).parent.parent,"seeds.json")))
+    # str = json.dumps(o)
+    # os.environ["known_seeds"] = str
+    print("Found seeds in local in repo:",known_seeds)
 else:
     print("Found seeds in env-variables: " + os.environ["known_seeds"])
 
