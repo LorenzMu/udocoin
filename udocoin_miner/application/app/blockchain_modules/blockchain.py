@@ -71,7 +71,7 @@ class Blockchain:
                 )
             ).hexdigest()
 
-            if hash_operation[:7] != "0000000" and index > 1:
+            if hash_operation[:6] != "000000" and index > 1:
                 print(hash_operation)
                 print("Invalid proof of work detected, block rejected!")
                 return False

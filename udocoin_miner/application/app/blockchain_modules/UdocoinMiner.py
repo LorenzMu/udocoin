@@ -93,7 +93,7 @@ class UdocoinMiner:
             data_to_hash = self.blockchain_instance.generate_pre_hash(self.new_proof, previous_PoW, index, data)
             hash_operation = hashlib.sha256(data_to_hash).hexdigest()
             #If last five digits of the hash are "0", the proof is accepted
-            if hash_operation[:7]== "0000000":
+            if hash_operation[:6]== "000000":
                 check_proof = True
             else:
                 self.new_proof += 1
