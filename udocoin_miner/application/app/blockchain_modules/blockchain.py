@@ -71,7 +71,7 @@ class Blockchain:
                 )
             ).hexdigest()
 
-            if hash_operation[:5] != "00000" and index > 1:
+            if hash_operation[:7] != "0000000" and index > 1:
                 print(hash_operation)
                 print("Invalid proof of work detected, block rejected!")
                 return False
@@ -92,7 +92,7 @@ class Blockchain:
 
     #Exponential block value decay to combat currency inflation
     def get_block_value(self, index):
-        return 1024 / (2**(index//100))
+        return 1024 / (2**(index//1000))
 
 
     #Account balance is valid once blocks are 5 blocks deep in the blockchain
