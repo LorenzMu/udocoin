@@ -17,6 +17,11 @@ The following paragraphs explain how to run the miner-application and the wallet
 
 ## Udocoin Miner
 
+Before starting, open a Powershell window as an Administrator and execute the following command to be able to execute the Udocoin Powershell starting script.
+```sh
+set-executionpolicy remotesigned
+```
+
 ### Docker/docker-compose
 
 To run the udocoin miner application, with Docker you need to have Docker Desktop and docker-compose installed on your machine. 
