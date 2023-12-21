@@ -2,7 +2,14 @@
 import requests
 # check if miner is running on port 80 or 5000
 address = "http://localhost"
-if not requests.get("http://localhost/get/is_active").status_code == 200:
+try:
+    port_80_is_active = requests.get("http://localhost/get/is_active").status_code == 200
+except:
+    port_80_is_active = False
+
+if not port_80_is_active:
     address = "http://localhost:5000"
 
-print(requests.get(f"{address}/consensus",timeout=100).text)
+print(f"Testing consensus on {address}")
+
+print(requests.get(f"{address}/consensus_test",timeout=10).text)
