@@ -114,6 +114,8 @@ The app will notify you that it's running with an unlicensed version of Chaquopy
 
 If you don't get asked to grant camera-permission, go to your device's settings > apps > Udocoin Wallet and allow camera usage.
 
+Scan the private key from sources/keys/server/privkey.png to immediately gain access to an account with balance if the seed server on our aws ec2 instance is running :)
+
 ## Tests
 
 ### Consensus
