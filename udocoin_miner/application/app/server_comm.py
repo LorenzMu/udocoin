@@ -81,7 +81,7 @@ def setup_socket_connections():
     known_seeds = json.loads(os.environ["known_seeds"])
     if not os.environ["IS_SEED_SERVER"]:
         # if peer server -> find seed server with fewest connections (loadbalancing)
-        fewest_active_connections = {"ip":"","number_of_connections":0}
+        fewest_active_connections = {"ip":"","number_of_connections":-1}
         for seed_ip in known_seeds:
             number_of_connections = requests.get(seed_ip + "/get/connections").json()["connections"]
             if number_of_connections > fewest_active_connections["number_of_connections"]:
