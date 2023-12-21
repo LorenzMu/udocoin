@@ -17,7 +17,8 @@ The following paragraphs explain how to run the miner-application and the wallet
 
 ## Udocoin Miner
 
-Before starting, open a Powershell window as an Administrator and execute the following command to be able to execute the Udocoin Powershell starting script.
+Before starting, you might need to open a Powershell window as an Administrator and execute the following command to be able to execute the Udocoin Powershell starting script.
+
 ```sh
 set-executionpolicy remotesigned
 ```
@@ -112,6 +113,7 @@ The app will notify you that it's running with an unlicensed version of Ch
 | Name | Link |
 | --- | --- |
 | Primary GitHub Repository | https://github.com/LorenzMu/udocoin |
-| Thesis |  |
-| Wallet-app APK | https://drive.google.com/file/d/1yusORkja0yB-bQkYlmvke-RJx2j43PTV/view?usp=drive_link |
+| Thesis | https://drive.google.com/file/d/1oxez2EUX-5tV6rElotlojEpF0cuj_UPQ/view |
+| Slides | https://drive.google.com/file/d/1cIJzTRuKEQbGstQIJW4WPHlkCkoC6eFM/view |
+| Wallet APK | https://drive.google.com/file/d/1l7hMnSQz90Zy7ar2AirQYWBE_J9Nww9o/view?usp=drive_link |
 | Sources gDrive | https://drive.google.com/drive/folders/1zLEWjr3jMXuw4lIt8uKNWesUSG-uYkJ3 |
