@@ -5,9 +5,9 @@ from app.blockchain_modules.UdocoinMiner import UdocoinMiner
 #The longest blockchain is chosen as the consensus blockchain
 def consensus_test():
     print("STARTING CONSENSUS TEST")
-    my_miner = UdocoinMiner(proof_to_start_with=1000)
-    my_miner2 = UdocoinMiner(proof_to_start_with= 1)
-    my_miner3 = UdocoinMiner(proof_to_start_with=10000)
+    my_miner = UdocoinMiner(proof_to_start_with=1000,difficulty=4)
+    my_miner2 = UdocoinMiner(proof_to_start_with= 1,difficulty=4)
+    my_miner3 = UdocoinMiner(proof_to_start_with=10000,difficulty=4)
     for i in range(3):
         my_miner.mine_block()
         my_miner2.mine_block()
@@ -27,3 +27,5 @@ def consensus_test():
     print("Blockchains are equal", my_miner.blockchain_instance.blockchain == bl2 )
 
     print("FINISHED CONSENSUS TEST")
+
+    return my_miner.blockchain_instance.blockchain == bl2
