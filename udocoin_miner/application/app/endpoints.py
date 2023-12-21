@@ -27,6 +27,10 @@ def get_seeds():
 def get_active():
     return {"active":True}
 
+@app.route('/get/connections')
+def get_connections():
+    return {"connections":server_comm.count_clients()}
+
 ''' miner '''
 
 @app.route("/miner/kill")

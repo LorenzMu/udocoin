@@ -68,14 +68,36 @@ def is_seed_active(ip):
         return response.status_code == 200
     except:
         return False
-
+    
 socket_clients = []
 
+number_of_active_clients = 0
+
+def count_clients():
+    return number_of_active_clients
+
 def setup_socket_connections():
+    ips_to_connect = []
     known_seeds = json.loads(os.environ["known_seeds"])
-    for seed_ip in known_seeds:
+    if not os.environ["IS_SEED_SERVER"]:
+        # if peer server -> find seed server with fewest connections (loadbalancing)
+        fewest_active_connections = {"ip":"","number_of_connections":0}
+        for seed_ip in known_seeds:
+            number_of_connections = requests.get(seed_ip + "/get/connections").json()["connections"]
+            if number_of_connections > fewest_active_connections["number_of_connections"]:
+                fewest_active_connections["ip"] = seed_ip
+                fewest_active_connections["number_of_connections"] = number_of_connections
+        if fewest_active_connections["ip"] == "":
+            print("#########################################################")
+            print("Could not find any seed server.")
+            print("#########################################################")
+            return
+        ips_to_connect.append(fewest_active_connections["ip"])
+    else:
+        ips_to_connect = known_seeds
+    for ip in ips_to_connect:
         socket_client = connect_socket_to_seed(
-            seed_ip=seed_ip,
+            seed_ip=ip,
             connection_type="seed-to-seed" if os.environ["IS_SEED_SERVER"] else "peer-to_seed")
         if socket_client is not None:
             set_socket_listeners(socket_client)
@@ -86,7 +108,6 @@ def setup_socket_connections():
                 print("#########################################################")
                 print("Connection set up successfully to " + seed_ip)
                 print("#########################################################")
-                break
     # raise exception if no connection could be set up
     if len(socket_clients) == 0:
         # raise Exception("Could not create connection from peer to any seed server.")        
@@ -202,9 +223,12 @@ def set_socket_listeners(socket_client):
     @socket_client.on('broadcast_transaction_request')
     def on_broadcast_transaction_request_(data):
         return on_broadcast_transaction_request(data)
-    @socketio.on('request_unconfirmed_blocks')
+    @socket_client.on('request_unconfirmed_blocks')
     def on_request_unconfirmed_blocks_():
         return on_request_unconfirmed_blocks()
+    @socket_client.on('disconnect')
+    def on_disconnect_():
+        return on_disconnect()
 
 # Receive events from connections set up by clients
 @socketio.on('broadcast_data')
@@ -213,6 +237,8 @@ def on_broadcast_data(data):
 
 @socketio.on('connect_to_seed')
 def on_connect_to_seed(args):
+    global number_of_active_clients
+    number_of_active_clients += 1
     sid = flask_request.sid
     connection_type = args["connection_type"]
     print(f'[Seed-Server] Received connection request')
@@ -325,3 +351,8 @@ def message_previously_received(data):
     if len(received_broadcast_ids) > 100:
         received_broadcast_ids.pop(0)
     return False
+
+@socketio.on("disconnect")
+def on_disconnect():
+    global number_of_active_clients
+    number_of_active_clients -= 1
