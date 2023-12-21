@@ -145,6 +145,7 @@ __pycache__/
 /pub_key.txt
 *.pub
 priv_key
+*.jks
 
 #vscode
 .vscode
