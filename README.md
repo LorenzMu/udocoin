@@ -97,7 +97,7 @@ Follow the instructions in the terminal and the server will be running on [local
 
 ## Udocoin Wallet
 
-To create and send transactions, the wallet app should be used. Alternatively, you can use the file "post_to_localohost.py" to create a transaction and post it to your locally hosted blockchain. You can download the APK-File [here](https://drive.google.com/file/d/1l7hMnSQz90Zy7ar2AirQYWBE_J9Nww9o/view?usp=drive_link) and install it on your android device with an android version of at least 7.1.1. It is recommended to use a USB-cable to transfer the app to the mobile device.
+To create and send transactions, the wallet app should be used. Alternatively, you can use the file "post_to_localhost.py" to create a transaction and post it to your locally hosted udocoin miner. You can download the APK-File [here](https://drive.google.com/file/d/1l7hMnSQz90Zy7ar2AirQYWBE_J9Nww9o/view?usp=drive_link) and install it on your android device with an android version of at least 7.1.1. It is recommended to use a USB-cable to transfer the app to the mobile device.
 
 The app was developed and tested on 
 
