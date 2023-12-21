@@ -27,7 +27,7 @@ set-executionpolicy remotesigned
 
 To run the udocoin miner application, with Docker you need to have Docker Desktop and docker-compose installed on your machine. 
 
-If you don't have a public and a private key, you also need to have at least python 3.8 to generate keys. (See References for testing keys)
+If you don't have a public and a private key, you also need to have at least Python 3.8 to generate keys. (See References for testing keys)
 
 In your terminal, change your directory to udocoin/udocoin_miner
 
@@ -47,13 +47,13 @@ Other operating systems:
 source start.sh
 ```
 
-Building the docker containers will take some time. Keep in mind to have the Docker Desktop app running while building the application.
+Building the docker containers will take some time. Keep in mind you will have to have the Docker Desktop app running while building the application.
 
 The server will be running on [localhost:80](http://localhost).
 
 ### Without Docker
 
-To run the udocoin miner application without Docker, you need to have at least python 3.8 installed.
+To run the udocoin miner application without Docker, you need to have at least Python 3.8 installed.
 
 Change the directory to udocoin/udocoin_miner/application
 
@@ -61,7 +61,7 @@ Change the directory to udocoin/udocoin_miner/application
 cd udocoin_miner/application
 ```
 
-Create and activate a python virtual environment and install required packages
+Create and activate a Python virtual environment and install required packages
 
 Windows:
 
@@ -97,7 +97,7 @@ Follow the instructions in the terminal and the server will be running on [local
 
 ## Udocoin Wallet
 
-To create and send transactions the wallet app must be used. You can download the APK-File [here](https://drive.google.com/file/d/1l7hMnSQz90Zy7ar2AirQYWBE_J9Nww9o/view?usp=drive_link) and install it on you android device with an android version of at least 7.1.1. It is recommended to use a USB-cable to transfer the app to the mobile device.
+To create and send transactions, the wallet app should be used. Alternatively, you can use the file "post_to_localohost.py" to create a transaction and post it to your locally hosted blockchain. You can download the APK-File [here](https://drive.google.com/file/d/1l7hMnSQz90Zy7ar2AirQYWBE_J9Nww9o/view?usp=drive_link) and install it on your android device with an android version of at least 7.1.1. It is recommended to use a USB-cable to transfer the app to the mobile device.
 
 The app was developed and tested on 
 
@@ -106,7 +106,7 @@ The app was developed and tested on
 
 If there are problems with the installation of the APK-file, try to open the project in Android Studio to run the development version.
 
-The app will notify you that it's running with an unlicensed version of Chaquopy. Please don't mind.
+The app will notify you that it's running with an unlicensed version of Chaquopy. Please don't mind, there are no licensing issues as Chaquopy has gone open source under the MIT license.
 
 If you don't get asked to grant camera-permission, go to your device's settings > apps > Udocoin Wallet and allow camera usage.
 
