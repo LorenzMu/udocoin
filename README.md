@@ -97,7 +97,7 @@ Follow the instructions in the terminal and the server will be running on [local
 
 ## Udocoin Wallet
 
-To create and send transactions the wallet app must be used. You can download the APK-File [here](https://drive.google.com/file/d/1yusORkja0yB-bQkYlmvke-RJx2j43PTV/view?usp=drive_link) and install it on you android device with an android version of at least 7.1.1. It is recommended to use a USB-cable to transfer the app to the mobile device.
+To create and send transactions the wallet app must be used. You can download the APK-File [here](https://drive.google.com/file/d/1l7hMnSQz90Zy7ar2AirQYWBE_J9Nww9o/view?usp=drive_link) and install it on you android device with an android version of at least 7.1.1. It is recommended to use a USB-cable to transfer the app to the mobile device.
 
 The app was developed and tested on 
 
@@ -106,7 +106,9 @@ The app was developed and tested on
 
 If there are problems with the installation of the APK-file, try to open the project in Android Studio to run the development version.
 
-The app will notify you that it's running with an unlicensed version of Ch
+The app will notify you that it's running with an unlicensed version of Chaquopy. Please don't mind.
+
+If you don't get asked to grant camera-permission, go to your device's settings > apps > Udocoin Wallet and allow camera usage.
 
 # References
 
