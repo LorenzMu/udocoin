@@ -79,8 +79,9 @@ def miner_continue():
 
 @app.route("/consensus_test",methods=["GET"])
 def cons_test():
-    consensus_test()
-    return "Ran consesnsus test, check console for more information"
+    if consensus_test():
+        return "Ran consensus test successfully."
+    return "Consensus failed."
 
 
 @app.route("/miner/post_transaction",methods=["POST"])

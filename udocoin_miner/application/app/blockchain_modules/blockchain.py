@@ -11,10 +11,11 @@ from app.blockchain_modules.ReturnValues import ReturnValues
 #This class' basic structure is taken from https://github.com/sixfwa/blockchain-fastapi/blob/main/blockchain.py
 #Its functionality has been heavily extended by us, however.
 class Blockchain:
-    def __init__(self):
+    def __init__(self,difficulty:int):
         self.blockchain: list[Block] = []
         self.balances: dict[str, float] = {}
         self.index_confirmed = -1
+        self.difficulty = difficulty
 
         #If no blockchain is found in the network, create your own blockchain 
         if self.get_consensus_blockchain(self.blockchain) == None:
@@ -71,7 +72,7 @@ class Blockchain:
                 )
             ).hexdigest()
 
-            if hash_operation[:6] != "000000" and index > 1:
+            if hash_operation[:self.difficulty] != "0" * self.difficulty and index > 1:
                 print(hash_operation)
                 print("Invalid proof of work detected, block rejected!")
                 return False

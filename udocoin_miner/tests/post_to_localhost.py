@@ -1,6 +1,7 @@
 import dataclasses 
 import datetime
 import json
+import os, pathlib
 import base64
 from cryptography.hazmat import primitives,backends
 from cryptography.hazmat.primitives import asymmetric,serialization
@@ -105,17 +106,37 @@ def get_pub_key_from_path(path: str) -> str:
     with open(path, "r") as f:
         return f.read()
     
-priv_key_path = input("Please enter your private key's absolute path: ")
-pub_key_path = input("Please enter your public key's absolute path: ")
+def getPubkey():
+    # ONLY USED IN DEV ENV
+    PUBKEY_PATH = os.path.join(os.path.expanduser("~"),".udocoin","pub_key.pub")
+    pubkey_path_input = input("Please insert the path to your public-key or skip for default: ")
+    PUBKEY_PATH = pubkey_path_input if pubkey_path_input != "" else PUBKEY_PATH
+    if not os.path.exists(PUBKEY_PATH):
+        print(f'File not found: {PUBKEY_PATH}')
+        return getPubkey()
+    return PUBKEY_PATH
+
+def getPrivkey():
+    # ONLY USED IN DEV ENV
+    PRIVKEY_PATH = os.path.join(os.path.expanduser("~"),".udocoin","priv_key")
+    privkey_path_input = input("Please insert the path to your private-key or skip for default: ")
+    PRIVKEY_PATH = privkey_path_input if privkey_path_input != "" else PRIVKEY_PATH
+    if not os.path.exists(PRIVKEY_PATH):
+        print(f'File not found: {PRIVKEY_PATH}')
+        return getPrivkey()
+    return PRIVKEY_PATH
+
+priv_key_path = getPrivkey()
+pub_key_path = getPubkey()
 
 #i.e. enter something like
 #C:/Users/loren/.udocoin/priv_key
 #C:/Users/loren/.udocoin/pub_key.pub
 
-destination_adress = input("Please enter your destination address: ")
+destination_adress = input("Please enter your destination address or something random for testing purposes :) ")
 amount = float(input("Please enter the amount of Udocoins you wish to send: "))
 
-priv_key_str = get_priv_key_from_path(priv_key_path)
+priv_key_str =get_priv_key_from_path(priv_key_path)
 pub_key_str = get_pub_key_from_path(pub_key_path)
 
 transaction_request = create_transaction(priv_key_str,pub_key_str,destination_adress, amount)
@@ -123,6 +144,19 @@ print(transaction_request)
 
 
 import requests
-x = requests.post("http://localhost:5000/miner/post_transaction", json= json.loads(transaction_request))
+# check if miner is running on port 80 or 5000
+address = "http://localhost"
+try:
+    port_80_is_active = requests.get("http://localhost/get/is_active").status_code == 200
+except:
+    port_80_is_active = False
+
+if not port_80_is_active:
+    address = "http://localhost:5000"
+
+
+print(f"Posting transaction to {address}")
+
+x = requests.post(f"{address}/miner/post_transaction", json= json.loads(transaction_request))
 print("POSTED")
 print(x)

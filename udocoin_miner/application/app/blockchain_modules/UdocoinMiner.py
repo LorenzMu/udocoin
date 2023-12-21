@@ -15,12 +15,13 @@ import json
 #The blockchain as the central data structure is the consistent class and may not have different implementations
 class UdocoinMiner:
     #Proof to start with may vary, i.e. in mining pools
-    def __init__(self, proof_to_start_with: int):
-        self.blockchain_instance: Blockchain = Blockchain()
+    def __init__(self, proof_to_start_with: int,difficulty:int=6):
+        self.blockchain_instance: Blockchain = Blockchain(difficulty=difficulty)
         self.mempool: list[SignedTransaction] = []
         self.proof_to_start_with: int = proof_to_start_with
         self.mining: bool = True
         self.new_proof: int = proof_to_start_with
+        self.difficulty = difficulty
 
     def stop_mining(self):
         print("Stopping mining...")
@@ -93,7 +94,7 @@ class UdocoinMiner:
             data_to_hash = self.blockchain_instance.generate_pre_hash(self.new_proof, previous_PoW, index, data)
             hash_operation = hashlib.sha256(data_to_hash).hexdigest()
             #If last five digits of the hash are "0", the proof is accepted
-            if hash_operation[:6]== "000000":
+            if hash_operation[:self.difficulty]== "0" * self.difficulty:
                 check_proof = True
             else:
                 self.new_proof += 1
